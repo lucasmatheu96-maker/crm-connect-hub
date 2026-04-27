@@ -1,0 +1,216 @@
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { captureLocation } from "@/hooks/useGeolocation";
+import { PageHeader } from "@/components/PageHeader";
+import { EmptyState } from "@/components/EmptyState";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, FileText, Pencil, Trash2, MapPin, ArrowRight } from "lucide-react";
+import { toast } from "sonner";
+import { fmtMoney, fmtDate } from "@/lib/format";
+import { ItensEditor, Item } from "@/components/ItensEditor";
+
+const STATUSES = ["rascunho","enviado","aprovado","rejeitado","expirado"] as const;
+const statusColor: Record<string, string> = {
+  rascunho: "bg-secondary text-secondary-foreground",
+  enviado: "bg-primary text-primary-foreground",
+  aprovado: "bg-success text-success-foreground",
+  rejeitado: "bg-destructive text-destructive-foreground",
+  expirado: "bg-muted text-muted-foreground",
+};
+
+export default function Orcamentos() {
+  const { user } = useAuth();
+  const [list, setList] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [open, setOpen] = useState(false);
+  const [clientes, setClientes] = useState<any[]>([]);
+  const [editing, setEditing] = useState<any>(null);
+  const [form, setForm] = useState<any>({ status: "rascunho", desconto: 0 });
+  const [itens, setItens] = useState<Item[]>([]);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => { load(); }, []);
+
+  const load = async () => {
+    setLoading(true);
+    const [{ data: orcs }, { data: cls }] = await Promise.all([
+      supabase.from("orcamentos").select("*, clientes(nome)").order("created_at", { ascending: false }),
+      supabase.from("clientes").select("id, nome").order("nome"),
+    ]);
+    setList(orcs || []); setClientes(cls || []); setLoading(false);
+  };
+
+  const openNew = () => { setEditing(null); setForm({ status: "rascunho", desconto: 0 }); setItens([]); setOpen(true); };
+  const openEdit = async (o: any) => {
+    setEditing(o); setForm(o);
+    const { data } = await supabase.from("orcamento_itens").select("*").eq("orcamento_id", o.id);
+    setItens((data || []).map((i: any) => ({ produto_id: i.produto_id, descricao: i.descricao, quantidade: Number(i.quantidade), preco_unitario: Number(i.preco_unitario) })));
+    setOpen(true);
+  };
+
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.cliente_id) { toast.error("Selecione um cliente"); return; }
+    if (itens.length === 0) { toast.error("Adicione ao menos um item"); return; }
+    setBusy(true);
+
+    const subtotal = itens.reduce((s, i) => s + Number(i.quantidade) * Number(i.preco_unitario), 0);
+    const total = Math.max(0, subtotal - Number(form.desconto || 0));
+
+    const payload: any = {
+      cliente_id: form.cliente_id,
+      status: form.status,
+      validade: form.validade || null,
+      desconto: Number(form.desconto || 0),
+      total,
+      observacoes: form.observacoes || null,
+      owner_id: user!.id,
+    };
+
+    let orcamentoId = editing?.id;
+    if (editing) {
+      const { error } = await supabase.from("orcamentos").update(payload).eq("id", editing.id);
+      if (error) { toast.error(error.message); setBusy(false); return; }
+      await supabase.from("orcamento_itens").delete().eq("orcamento_id", editing.id);
+    } else {
+      toast.info("Capturando localização...");
+      const geo = await captureLocation();
+      const { data, error } = await supabase.from("orcamentos").insert({ ...payload, ...geo }).select("id").single();
+      if (error) { toast.error(error.message); setBusy(false); return; }
+      orcamentoId = data.id;
+    }
+
+    const itensRows = itens.map((i) => ({
+      orcamento_id: orcamentoId,
+      produto_id: i.produto_id || null,
+      descricao: i.descricao || "Item",
+      quantidade: i.quantidade,
+      preco_unitario: i.preco_unitario,
+      subtotal: i.quantidade * i.preco_unitario,
+    }));
+    const { error: e2 } = await supabase.from("orcamento_itens").insert(itensRows);
+    if (e2) { toast.error(e2.message); setBusy(false); return; }
+
+    setBusy(false); setOpen(false); load();
+    toast.success(editing ? "Orçamento atualizado" : "Orçamento criado");
+  };
+
+  const remove = async (id: string) => {
+    if (!confirm("Excluir orçamento?")) return;
+    const { error } = await supabase.from("orcamentos").delete().eq("id", id);
+    if (error) toast.error(error.message); else { toast.success("Excluído"); load(); }
+  };
+
+  const converterEmPedido = async (o: any) => {
+    if (!confirm(`Converter orçamento #${o.numero} em pedido?`)) return;
+    const { data: itensData } = await supabase.from("orcamento_itens").select("*").eq("orcamento_id", o.id);
+    const geo = await captureLocation();
+    const { data: ped, error } = await supabase.from("pedidos").insert({
+      cliente_id: o.cliente_id, orcamento_id: o.id, owner_id: user!.id,
+      desconto: o.desconto, total: o.total, observacoes: o.observacoes,
+      ...geo,
+    }).select("id").single();
+    if (error) { toast.error(error.message); return; }
+    if (itensData?.length) {
+      await supabase.from("pedido_itens").insert(itensData.map((i: any) => ({
+        pedido_id: ped.id, produto_id: i.produto_id, descricao: i.descricao,
+        quantidade: i.quantidade, preco_unitario: i.preco_unitario, subtotal: i.subtotal,
+      })));
+    }
+    await supabase.from("orcamentos").update({ status: "aprovado" }).eq("id", o.id);
+    toast.success("Pedido criado a partir do orçamento");
+    load();
+  };
+
+  return (
+    <div>
+      <PageHeader title="Orçamentos" description="Propostas comerciais e cotações" actions={<Button variant="brand" onClick={openNew}><Plus className="h-4 w-4" /> Novo orçamento</Button>} />
+
+      <Card className="p-4 shadow-elevated">
+        {loading ? <div className="py-8 text-center text-sm text-muted-foreground">Carregando...</div>
+          : list.length === 0 ? <EmptyState icon={FileText} title="Nenhum orçamento" description="Crie propostas comerciais com itens e valores." action={<Button variant="brand" onClick={openNew}><Plus className="h-4 w-4" /> Novo orçamento</Button>} />
+          : (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>#</TableHead>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Validade</TableHead>
+                  <TableHead className="text-right">Total</TableHead>
+                  <TableHead>Loc.</TableHead>
+                  <TableHead>Criado</TableHead>
+                  <TableHead className="w-32"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {list.map((o) => (
+                  <TableRow key={o.id}>
+                    <TableCell className="font-mono text-xs">#{o.numero}</TableCell>
+                    <TableCell className="font-medium">{o.clientes?.nome}</TableCell>
+                    <TableCell><Badge className={statusColor[o.status]}>{o.status}</Badge></TableCell>
+                    <TableCell className="text-xs">{fmtDate(o.validade)}</TableCell>
+                    <TableCell className="text-right font-semibold">{fmtMoney(o.total)}</TableCell>
+                    <TableCell>{o.geo_lat ? <a href={`https://www.google.com/maps?q=${o.geo_lat},${o.geo_lng}`} target="_blank" rel="noreferrer"><MapPin className="h-4 w-4 text-primary" /></a> : <span className="text-xs text-muted-foreground">—</span>}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{fmtDate(o.created_at)}</TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Button size="icon" variant="ghost" title="Converter em pedido" onClick={() => converterEmPedido(o)}><ArrowRight className="h-4 w-4 text-success" /></Button>
+                        <Button size="icon" variant="ghost" onClick={() => openEdit(o)}><Pencil className="h-4 w-4" /></Button>
+                        <Button size="icon" variant="ghost" onClick={() => remove(o.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </Card>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>{editing ? `Orçamento #${editing.numero}` : "Novo orçamento"}</DialogTitle></DialogHeader>
+          <form onSubmit={save} className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div className="space-y-2 sm:col-span-2">
+                <Label>Cliente *</Label>
+                <Select value={form.cliente_id || ""} onValueChange={(v) => setForm({ ...form, cliente_id: v })}>
+                  <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                  <SelectContent>{clientes.map((c) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Status</Label>
+                <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2"><Label>Validade</Label><Input type="date" value={form.validade || ""} onChange={(e) => setForm({ ...form, validade: e.target.value })} /></div>
+              <div className="space-y-2"><Label>Desconto (R$)</Label><Input type="number" step="0.01" min="0" value={form.desconto || 0} onChange={(e) => setForm({ ...form, desconto: e.target.value })} /></div>
+            </div>
+
+            <ItensEditor itens={itens} onChange={setItens} />
+
+            {!editing && <div className="flex items-start gap-2 rounded-lg bg-accent-soft p-3 text-xs text-accent"><MapPin className="h-4 w-4 shrink-0 mt-0.5" /><span>Localização atual será capturada ao salvar.</span></div>}
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
+              <Button type="submit" variant="brand" disabled={busy}>{busy ? "Salvando..." : "Salvar"}</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
