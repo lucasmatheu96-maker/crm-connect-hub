@@ -78,6 +78,16 @@ export default function Configuracoes() {
             </p>
           </div>
 
+          <div className="rounded-lg border border-dashed bg-muted/40 p-3 text-xs text-muted-foreground space-y-1">
+            <p className="font-medium text-foreground">Como funciona a sincronização (bidirecional):</p>
+            <p>1. <strong>Importa</strong> primeiro novos dados da planilha para o app:</p>
+            <p className="pl-3">• <strong>Clientes</strong>: identificados pelo <strong>CPF/CNPJ</strong></p>
+            <p className="pl-3">• <strong>Produtos</strong>: identificados pelo <strong>SKU</strong></p>
+            <p className="pl-3">• <strong>Orçamentos/Pedidos</strong>: vinculados pelo <strong>CPF/CNPJ Cliente</strong> (ou Nome)</p>
+            <p>2. Depois <strong>exporta</strong> tudo do app para a planilha (com coluna "Fonte").</p>
+            <p>3. Registros vindos da planilha (Fonte = <em>sheet</em>) <strong>só podem ser editados/excluídos por administradores</strong>.</p>
+          </div>
+
           <div className="flex items-center justify-between rounded-lg border p-3">
             <div>
               <Label className="font-medium">Sincronização habilitada</Label>
