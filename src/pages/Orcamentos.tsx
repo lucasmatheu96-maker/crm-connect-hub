@@ -16,6 +16,7 @@ import { Plus, FileText, Pencil, Trash2, MapPin, ArrowRight } from "lucide-react
 import { toast } from "sonner";
 import { fmtMoney, fmtDate } from "@/lib/format";
 import { ItensEditor, Item } from "@/components/ItensEditor";
+import { openMapLocation } from "@/lib/maps";
 
 const STATUSES = ["rascunho","enviado","aprovado","rejeitado","expirado"] as const;
 const statusColor: Record<string, string> = {
@@ -130,6 +131,11 @@ export default function Orcamentos() {
     load();
   };
 
+  const handleOpenMap = async (lat: number, lng: number) => {
+    const { opened } = await openMapLocation(lat, lng);
+    if (!opened) toast.info("Não foi possível abrir o mapa aqui. Copiamos o link para você colar no navegador.");
+  };
+
   return (
     <div>
       <PageHeader title="Orçamentos" description="Propostas comerciais e cotações" actions={<Button variant="brand" onClick={openNew}><Plus className="h-4 w-4" /> Novo orçamento</Button>} />
@@ -160,7 +166,7 @@ export default function Orcamentos() {
                     <TableCell><Badge className={statusColor[o.status]}>{o.status}</Badge></TableCell>
                     <TableCell className="text-xs">{fmtDate(o.validade)}</TableCell>
                     <TableCell className="text-right font-semibold">{fmtMoney(o.total)}</TableCell>
-                    <TableCell>{o.geo_lat ? <a href={`https://www.google.com/maps?q=${o.geo_lat},${o.geo_lng}`} target="_blank" rel="noreferrer"><MapPin className="h-4 w-4 text-primary" /></a> : <span className="text-xs text-muted-foreground">—</span>}</TableCell>
+                    <TableCell>{o.geo_lat && o.geo_lng ? <button type="button" onClick={() => handleOpenMap(o.geo_lat, o.geo_lng)}><MapPin className="h-4 w-4 text-primary" /></button> : <span className="text-xs text-muted-foreground">—</span>}</TableCell>
                     <TableCell className="text-xs text-muted-foreground">{fmtDate(o.created_at)}</TableCell>
                     <TableCell>
                       <div className="flex gap-1">
