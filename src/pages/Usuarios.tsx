@@ -267,8 +267,8 @@ export default function Usuarios() {
                           <sb.Icon className="h-3 w-3 mr-1" /> {sb.label}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{formatDateTime(a.created_at)}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{a.activated_at ? formatDateTime(a.activated_at) : "—"}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{fmtDateTime(a.created_at)}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{a.activated_at ? fmtDateTime(a.activated_at) : "—"}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
                           {a.status !== "ativo" && (
@@ -335,7 +335,7 @@ export default function Usuarios() {
                 )}
                 {logs.map((l) => (
                   <TableRow key={l.id}>
-                    <TableCell className="text-xs whitespace-nowrap">{formatDateTime(l.created_at)}</TableCell>
+                    <TableCell className="text-xs whitespace-nowrap">{fmtDateTime(l.created_at)}</TableCell>
                     <TableCell className="text-xs">{l.email || "—"}</TableCell>
                     <TableCell><Badge variant="outline" className="uppercase text-[10px]">{l.action}</Badge></TableCell>
                     <TableCell>
