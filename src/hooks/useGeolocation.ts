@@ -6,40 +6,72 @@ export interface GeoCapture {
   geo_endereco: string | null;
 }
 
-/**
- * Captura a localização atual via GPS do navegador e faz reverse geocoding
- * via edge function (que usa GOOGLE_MAPS_API_KEY no servidor).
- * Sempre retorna um objeto seguro — se o usuário negar GPS, retorna nulls.
- */
-export async function captureLocation(): Promise<GeoCapture> {
-  const empty: GeoCapture = { geo_lat: null, geo_lng: null, geo_endereco: null };
-
-  if (typeof navigator === "undefined" || !navigator.geolocation) {
-    return empty;
-  }
-
-  const position = await new Promise<GeolocationPosition | null>((resolve) => {
-    navigator.geolocation.getCurrentPosition(
-      (pos) => resolve(pos),
-      () => resolve(null),
-      { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 },
-    );
-  });
-
-  if (!position) return empty;
-
-  const lat = position.coords.latitude;
-  const lng = position.coords.longitude;
-
-  let endereco: string | null = null;
+/** Reverse geocoding (coordenadas → endereço) */
+async function reverseGeocode(lat: number, lng: number): Promise<string | null> {
   try {
     const { data } = await supabase.functions.invoke("reverse-geocode", {
       body: { lat, lng },
     });
-    if (data?.address) endereco = data.address;
+    return data?.address ?? null;
   } catch {
-    // mantém endereço null se falhar
+    return null;
   }
+}
+
+/** Forward geocoding (endereço → coordenadas + endereço normalizado) */
+async function forwardGeocode(address: string): Promise<GeoCapture> {
+  try {
+    const { data } = await supabase.functions.invoke("reverse-geocode", {
+      body: { address },
+    });
+    if (data?.lat && data?.lng) {
+      return { geo_lat: data.lat, geo_lng: data.lng, geo_endereco: data.address ?? address };
+    }
+  } catch {
+    // ignore
+  }
+  return { geo_lat: null, geo_lng: null, geo_endereco: null };
+}
+
+/**
+ * Tenta capturar a localização do usuário via GPS do navegador.
+ * Se falhar (negado / sem suporte / timeout) e um endereço de fallback for informado,
+ * faz geocoding direto do endereço para obter coordenadas + endereço completo.
+ *
+ * Sempre retorna um objeto seguro (com nulls se não houver nenhuma informação).
+ */
+export async function captureLocation(fallbackAddress?: string | null): Promise<GeoCapture> {
+  const empty: GeoCapture = { geo_lat: null, geo_lng: null, geo_endereco: null };
+
+  const tryFallback = async (): Promise<GeoCapture> => {
+    if (!fallbackAddress || !fallbackAddress.trim()) return empty;
+    return await forwardGeocode(fallbackAddress.trim());
+  };
+
+  if (typeof navigator === "undefined" || !navigator.geolocation) {
+    return await tryFallback();
+  }
+
+  const position = await new Promise<GeolocationPosition | null>((resolve) => {
+    try {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => resolve(pos),
+        () => resolve(null),
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
+      );
+    } catch {
+      resolve(null);
+    }
+  });
+
+  if (!position) {
+    // GPS negado / indisponível → tenta pelo endereço digitado
+    return await tryFallback();
+  }
+
+  const lat = position.coords.latitude;
+  const lng = position.coords.longitude;
+  const endereco = await reverseGeocode(lat, lng);
 
   return { geo_lat: lat, geo_lng: lng, geo_endereco: endereco };
 }
