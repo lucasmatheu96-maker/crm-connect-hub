@@ -40,7 +40,11 @@ export default function Configuracoes() {
       toast.error(data?.error || error?.message || "Erro ao sincronizar");
       return;
     }
-    toast.success(`Sincronizado: ${Object.entries(data.counts).map(([k,v]) => `${v} ${k}`).join(" • ")}`);
+    const importedTxt = data.imported
+      ? Object.entries(data.imported).filter(([,v]) => (v as number) > 0).map(([k,v]) => `+${v} ${k}`).join(" • ")
+      : "";
+    const totalsTxt = Object.entries(data.counts).map(([k,v]) => `${v} ${k}`).join(" • ");
+    toast.success(`Sincronizado${importedTxt ? ` (importados: ${importedTxt})` : ""} • Totais: ${totalsTxt}`);
   };
 
   const extractId = (s: string) => {
