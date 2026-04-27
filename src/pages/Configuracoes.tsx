@@ -40,7 +40,11 @@ export default function Configuracoes() {
       toast.error(data?.error || error?.message || "Erro ao sincronizar");
       return;
     }
-    toast.success(`Sincronizado: ${Object.entries(data.counts).map(([k,v]) => `${v} ${k}`).join(" • ")}`);
+    const importedTxt = data.imported
+      ? Object.entries(data.imported).filter(([,v]) => (v as number) > 0).map(([k,v]) => `+${v} ${k}`).join(" • ")
+      : "";
+    const totalsTxt = Object.entries(data.counts).map(([k,v]) => `${v} ${k}`).join(" • ");
+    toast.success(`Sincronizado${importedTxt ? ` (importados: ${importedTxt})` : ""} • Totais: ${totalsTxt}`);
   };
 
   const extractId = (s: string) => {
@@ -72,6 +76,16 @@ export default function Configuracoes() {
             <p className="text-[11px] text-muted-foreground">
               Crie uma planilha no Google Sheets e <strong>compartilhe-a com permissão de Editor</strong> para a conta Google que você usou ao conectar — ou para qualquer um com o link. Cole o link aqui.
             </p>
+          </div>
+
+          <div className="rounded-lg border border-dashed bg-muted/40 p-3 text-xs text-muted-foreground space-y-1">
+            <p className="font-medium text-foreground">Como funciona a sincronização (bidirecional):</p>
+            <p>1. <strong>Importa</strong> primeiro novos dados da planilha para o app:</p>
+            <p className="pl-3">• <strong>Clientes</strong>: identificados pelo <strong>CPF/CNPJ</strong></p>
+            <p className="pl-3">• <strong>Produtos</strong>: identificados pelo <strong>SKU</strong></p>
+            <p className="pl-3">• <strong>Orçamentos/Pedidos</strong>: vinculados pelo <strong>CPF/CNPJ Cliente</strong> (ou Nome)</p>
+            <p>2. Depois <strong>exporta</strong> tudo do app para a planilha (com coluna "Fonte").</p>
+            <p>3. Registros vindos da planilha (Fonte = <em>sheet</em>) <strong>só podem ser editados/excluídos por administradores</strong>.</p>
           </div>
 
           <div className="flex items-center justify-between rounded-lg border p-3">
