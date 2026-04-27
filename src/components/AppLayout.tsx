@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
-  LayoutDashboard, Users, Package, FileText, ShoppingCart, Trello, Settings, LogOut, Smartphone, Download,
+  LayoutDashboard, Users, Package, FileText, ShoppingCart, Trello, Settings, LogOut, Smartphone, Download, ShieldCheck,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
@@ -68,20 +68,36 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
           ))}
 
           {role === "admin" && (
-            <NavLink
-              to="/configuracoes"
-              className={({ isActive }) =>
-                cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                  isActive
-                    ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-soft"
-                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                )
-              }
-            >
-              <Settings className="h-4 w-4" />
-              Configurações
-            </NavLink>
+            <>
+              <NavLink
+                to="/usuarios"
+                className={({ isActive }) =>
+                  cn(
+                    "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                    isActive
+                      ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-soft"
+                      : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                  )
+                }
+              >
+                <ShieldCheck className="h-4 w-4" />
+                Usuários
+              </NavLink>
+              <NavLink
+                to="/configuracoes"
+                className={({ isActive }) =>
+                  cn(
+                    "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                    isActive
+                      ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-soft"
+                      : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                  )
+                }
+              >
+                <Settings className="h-4 w-4" />
+                Configurações
+              </NavLink>
+            </>
           )}
 
           <NavLink

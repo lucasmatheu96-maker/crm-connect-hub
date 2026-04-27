@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_logs: {
+        Row: {
+          action: string
+          created_at: string
+          email: string | null
+          id: string
+          ip: string | null
+          provider: string | null
+          reason: string | null
+          success: boolean
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          ip?: string | null
+          provider?: string | null
+          reason?: string | null
+          success?: boolean
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          ip?: string | null
+          provider?: string | null
+          reason?: string | null
+          success?: boolean
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       app_settings: {
         Row: {
           google_sheet_id: string | null
@@ -31,6 +70,51 @@ export type Database = {
           google_sheet_id?: string | null
           id?: number
           sync_enabled?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      authorized_emails: {
+        Row: {
+          activated_at: string | null
+          activated_user_id: string | null
+          created_at: string
+          created_by: string | null
+          email: string
+          id: string
+          nome: string | null
+          notes: string | null
+          role: Database["public"]["Enums"]["app_role"]
+          status: string
+          telefone: string | null
+          updated_at: string
+        }
+        Insert: {
+          activated_at?: string | null
+          activated_user_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          email: string
+          id?: string
+          nome?: string | null
+          notes?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          status?: string
+          telefone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          activated_at?: string | null
+          activated_user_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string
+          id?: string
+          nome?: string | null
+          notes?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          status?: string
+          telefone?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -483,6 +567,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_current_user_authorized: { Args: never; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "vendedor"
