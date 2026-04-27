@@ -10,6 +10,21 @@ const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_sheets/v4";
 
 const SHEETS = ["Clientes", "Produtos", "Orcamentos", "Pedidos", "Oportunidades"] as const;
 
+function formatDateTimeForSheet(value: string | null | undefined) {
+  if (!value) return "";
+
+  const match = value.match(
+    /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,6}))?)?(Z|[+-]\d{2}:\d{2})?$/,
+  );
+
+  if (!match) return value;
+
+  const [, year, month, day, hour, minute, second = "00", fraction = "", timezone = "+00:00"] = match;
+  const micro = fraction.padEnd(6, "0").slice(0, 6);
+
+  return `${day}/${month}/${year} ${hour}:${minute}:${second}${micro !== "000000" ? `.${micro}` : ""} ${timezone}`;
+}
+
 async function callSheets(method: string, path: string, sheetsKey: string, lovKey: string, body?: any) {
   const r = await fetch(`${GATEWAY_URL}${path}`, {
     method,
@@ -89,23 +104,23 @@ Deno.serve(async (req: Request) => {
 
     const clientesRows = [
       ["ID","Nome","Empresa","CPF/CNPJ","Email","Telefone","Endereço","Cidade","Estado","CEP","Lat","Lng","Endereço GPS","Criado em"],
-      ...(clientesQ.data || []).map((c: any) => [c.id, c.nome, c.empresa, c.cpf_cnpj, c.email, c.telefone, c.endereco, c.cidade, c.estado, c.cep, c.geo_lat, c.geo_lng, c.geo_endereco, c.created_at]),
+      ...(clientesQ.data || []).map((c: any) => [c.id, c.nome, c.empresa, c.cpf_cnpj, c.email, c.telefone, c.endereco, c.cidade, c.estado, c.cep, c.geo_lat, c.geo_lng, c.geo_endereco, formatDateTimeForSheet(c.created_at)]),
     ];
     const produtosRows = [
       ["ID","Nome","SKU","Categoria","Preço","Estoque","Ativo","Criado em"],
-      ...(produtosQ.data || []).map((p: any) => [p.id, p.nome, p.sku, p.categoria, p.preco, p.estoque, p.ativo, p.created_at]),
+      ...(produtosQ.data || []).map((p: any) => [p.id, p.nome, p.sku, p.categoria, p.preco, p.estoque, p.ativo, formatDateTimeForSheet(p.created_at)]),
     ];
     const orcRows = [
       ["Número","Cliente","Status","Validade","Total","Lat","Lng","Endereço GPS","Criado em"],
-      ...(orcamentosQ.data || []).map((o: any) => [o.numero, o.clientes?.nome, o.status, o.validade, o.total, o.geo_lat, o.geo_lng, o.geo_endereco, o.created_at]),
+      ...(orcamentosQ.data || []).map((o: any) => [o.numero, o.clientes?.nome, o.status, o.validade, o.total, o.geo_lat, o.geo_lng, o.geo_endereco, formatDateTimeForSheet(o.created_at)]),
     ];
     const pedRows = [
       ["Número","Cliente","Status","Total","Lat","Lng","Endereço GPS","Criado em"],
-      ...(pedidosQ.data || []).map((p: any) => [p.numero, p.clientes?.nome, p.status, p.total, p.geo_lat, p.geo_lng, p.geo_endereco, p.created_at]),
+      ...(pedidosQ.data || []).map((p: any) => [p.numero, p.clientes?.nome, p.status, p.total, p.geo_lat, p.geo_lng, p.geo_endereco, formatDateTimeForSheet(p.created_at)]),
     ];
     const opRows = [
       ["Título","Cliente","Estágio","Valor","Probabilidade","Fechamento previsto","Criado em"],
-      ...(oportQ.data || []).map((o: any) => [o.titulo, o.clientes?.nome, o.estagio, o.valor, o.probabilidade, o.data_fechamento_prevista, o.created_at]),
+      ...(oportQ.data || []).map((o: any) => [o.titulo, o.clientes?.nome, o.estagio, o.valor, o.probabilidade, o.data_fechamento_prevista, formatDateTimeForSheet(o.created_at)]),
     ];
 
     await writeTab(spreadsheetId, "Clientes", clientesRows, sheetsKey, lovKey);
