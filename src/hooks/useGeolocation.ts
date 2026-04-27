@@ -16,7 +16,7 @@ async function reverseGeocode(lat: number, lng: number): Promise<string | null> 
     const { data } = await supabase.functions.invoke("reverse-geocode", {
       body: { lat, lng },
     });
-    return data?.address ?? null;
+    return data?.address ?? data?.formatted_address ?? null;
   } catch {
     return null;
   }
@@ -29,7 +29,11 @@ async function forwardGeocode(address: string): Promise<GeoCapture> {
       body: { address },
     });
     if (hasCoordinates(data?.lat, data?.lng)) {
-      return { geo_lat: data.lat, geo_lng: data.lng, geo_endereco: data.address ?? address };
+      return {
+        geo_lat: data.lat,
+        geo_lng: data.lng,
+        geo_endereco: data?.address ?? data?.formatted_address ?? address,
+      };
     }
   } catch {
     // ignore

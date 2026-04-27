@@ -10,6 +10,33 @@ const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_sheets/v4";
 
 const SHEETS = ["Clientes", "Produtos", "Orcamentos", "Pedidos", "Oportunidades"] as const;
 
+function formatDateTimeForSheet(value: string | null | undefined) {
+  if (!value) return "";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  return new Intl.DateTimeFormat("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).format(date);
+}
+
+function joinAddressParts(...parts: Array<string | null | undefined>) {
+  return parts.map((part) => part?.trim()).filter(Boolean).join(", ");
+}
+
+function resolveGeoAddress(geoAddress: string | null | undefined, structuredAddress: string) {
+  if (structuredAddress) return structuredAddress;
+  return geoAddress?.trim() || "";
+}
+
 async function callSheets(method: string, path: string, sheetsKey: string, lovKey: string, body?: any) {
   const r = await fetch(`${GATEWAY_URL}${path}`, {
     method,
@@ -82,30 +109,39 @@ Deno.serve(async (req: Request) => {
     const [clientesQ, produtosQ, orcamentosQ, pedidosQ, oportQ] = await Promise.all([
       supabase.from("clientes").select("*").order("created_at", { ascending: false }),
       supabase.from("produtos").select("*").order("created_at", { ascending: false }),
-      supabase.from("orcamentos").select("*, clientes(nome)").order("created_at", { ascending: false }),
-      supabase.from("pedidos").select("*, clientes(nome)").order("created_at", { ascending: false }),
+      supabase.from("orcamentos").select("*, clientes(nome, endereco, cidade, estado, cep, geo_endereco)").order("created_at", { ascending: false }),
+      supabase.from("pedidos").select("*, clientes(nome, endereco, cidade, estado, cep, geo_endereco)").order("created_at", { ascending: false }),
       supabase.from("oportunidades").select("*, clientes(nome)").order("created_at", { ascending: false }),
     ]);
 
     const clientesRows = [
       ["ID","Nome","Empresa","CPF/CNPJ","Email","Telefone","Endereço","Cidade","Estado","CEP","Lat","Lng","Endereço GPS","Criado em"],
-      ...(clientesQ.data || []).map((c: any) => [c.id, c.nome, c.empresa, c.cpf_cnpj, c.email, c.telefone, c.endereco, c.cidade, c.estado, c.cep, c.geo_lat, c.geo_lng, c.geo_endereco, c.created_at]),
+      ...(clientesQ.data || []).map((c: any) => {
+        const structuredAddress = joinAddressParts(c.endereco, c.cidade, c.estado, c.cep ? `CEP ${c.cep}` : null, "Brasil");
+        return [c.id, c.nome, c.empresa, c.cpf_cnpj, c.email, c.telefone, c.endereco, c.cidade, c.estado, c.cep, c.geo_lat, c.geo_lng, resolveGeoAddress(c.geo_endereco, structuredAddress), formatDateTimeForSheet(c.created_at)];
+      }),
     ];
     const produtosRows = [
       ["ID","Nome","SKU","Categoria","Preço","Estoque","Ativo","Criado em"],
-      ...(produtosQ.data || []).map((p: any) => [p.id, p.nome, p.sku, p.categoria, p.preco, p.estoque, p.ativo, p.created_at]),
+      ...(produtosQ.data || []).map((p: any) => [p.id, p.nome, p.sku, p.categoria, p.preco, p.estoque, p.ativo, formatDateTimeForSheet(p.created_at)]),
     ];
     const orcRows = [
       ["Número","Cliente","Status","Validade","Total","Lat","Lng","Endereço GPS","Criado em"],
-      ...(orcamentosQ.data || []).map((o: any) => [o.numero, o.clientes?.nome, o.status, o.validade, o.total, o.geo_lat, o.geo_lng, o.geo_endereco, o.created_at]),
+      ...(orcamentosQ.data || []).map((o: any) => {
+        const structuredAddress = joinAddressParts(o.clientes?.endereco, o.clientes?.cidade, o.clientes?.estado, o.clientes?.cep ? `CEP ${o.clientes.cep}` : null, "Brasil");
+        return [o.numero, o.clientes?.nome, o.status, o.validade, o.total, o.geo_lat, o.geo_lng, resolveGeoAddress(o.geo_endereco || o.clientes?.geo_endereco, structuredAddress), formatDateTimeForSheet(o.created_at)];
+      }),
     ];
     const pedRows = [
       ["Número","Cliente","Status","Total","Lat","Lng","Endereço GPS","Criado em"],
-      ...(pedidosQ.data || []).map((p: any) => [p.numero, p.clientes?.nome, p.status, p.total, p.geo_lat, p.geo_lng, p.geo_endereco, p.created_at]),
+      ...(pedidosQ.data || []).map((p: any) => {
+        const structuredAddress = joinAddressParts(p.clientes?.endereco, p.clientes?.cidade, p.clientes?.estado, p.clientes?.cep ? `CEP ${p.clientes.cep}` : null, "Brasil");
+        return [p.numero, p.clientes?.nome, p.status, p.total, p.geo_lat, p.geo_lng, resolveGeoAddress(p.geo_endereco || p.clientes?.geo_endereco, structuredAddress), formatDateTimeForSheet(p.created_at)];
+      }),
     ];
     const opRows = [
       ["Título","Cliente","Estágio","Valor","Probabilidade","Fechamento previsto","Criado em"],
-      ...(oportQ.data || []).map((o: any) => [o.titulo, o.clientes?.nome, o.estagio, o.valor, o.probabilidade, o.data_fechamento_prevista, o.created_at]),
+      ...(oportQ.data || []).map((o: any) => [o.titulo, o.clientes?.nome, o.estagio, o.valor, o.probabilidade, o.data_fechamento_prevista, formatDateTimeForSheet(o.created_at)]),
     ];
 
     await writeTab(spreadsheetId, "Clientes", clientesRows, sheetsKey, lovKey);
