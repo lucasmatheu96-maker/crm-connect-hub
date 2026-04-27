@@ -14,16 +14,499 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      app_settings: {
+        Row: {
+          google_sheet_id: string | null
+          id: number
+          sync_enabled: boolean
+          updated_at: string
+        }
+        Insert: {
+          google_sheet_id?: string | null
+          id?: number
+          sync_enabled?: boolean
+          updated_at?: string
+        }
+        Update: {
+          google_sheet_id?: string | null
+          id?: number
+          sync_enabled?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      clientes: {
+        Row: {
+          cep: string | null
+          cidade: string | null
+          cpf_cnpj: string | null
+          created_at: string
+          email: string | null
+          empresa: string | null
+          endereco: string | null
+          estado: string | null
+          geo_endereco: string | null
+          geo_lat: number | null
+          geo_lng: number | null
+          id: string
+          nome: string
+          observacoes: string | null
+          owner_id: string
+          telefone: string | null
+          updated_at: string
+        }
+        Insert: {
+          cep?: string | null
+          cidade?: string | null
+          cpf_cnpj?: string | null
+          created_at?: string
+          email?: string | null
+          empresa?: string | null
+          endereco?: string | null
+          estado?: string | null
+          geo_endereco?: string | null
+          geo_lat?: number | null
+          geo_lng?: number | null
+          id?: string
+          nome: string
+          observacoes?: string | null
+          owner_id: string
+          telefone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cep?: string | null
+          cidade?: string | null
+          cpf_cnpj?: string | null
+          created_at?: string
+          email?: string | null
+          empresa?: string | null
+          endereco?: string | null
+          estado?: string | null
+          geo_endereco?: string | null
+          geo_lat?: number | null
+          geo_lng?: number | null
+          id?: string
+          nome?: string
+          observacoes?: string | null
+          owner_id?: string
+          telefone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      oportunidades: {
+        Row: {
+          cliente_id: string | null
+          created_at: string
+          data_fechamento_prevista: string | null
+          descricao: string | null
+          estagio: Database["public"]["Enums"]["funil_estagio"]
+          geo_endereco: string | null
+          geo_lat: number | null
+          geo_lng: number | null
+          id: string
+          owner_id: string
+          posicao: number
+          probabilidade: number
+          titulo: string
+          updated_at: string
+          valor: number
+        }
+        Insert: {
+          cliente_id?: string | null
+          created_at?: string
+          data_fechamento_prevista?: string | null
+          descricao?: string | null
+          estagio?: Database["public"]["Enums"]["funil_estagio"]
+          geo_endereco?: string | null
+          geo_lat?: number | null
+          geo_lng?: number | null
+          id?: string
+          owner_id: string
+          posicao?: number
+          probabilidade?: number
+          titulo: string
+          updated_at?: string
+          valor?: number
+        }
+        Update: {
+          cliente_id?: string | null
+          created_at?: string
+          data_fechamento_prevista?: string | null
+          descricao?: string | null
+          estagio?: Database["public"]["Enums"]["funil_estagio"]
+          geo_endereco?: string | null
+          geo_lat?: number | null
+          geo_lng?: number | null
+          id?: string
+          owner_id?: string
+          posicao?: number
+          probabilidade?: number
+          titulo?: string
+          updated_at?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "oportunidades_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orcamento_itens: {
+        Row: {
+          created_at: string
+          descricao: string
+          id: string
+          orcamento_id: string
+          preco_unitario: number
+          produto_id: string | null
+          quantidade: number
+          subtotal: number
+        }
+        Insert: {
+          created_at?: string
+          descricao: string
+          id?: string
+          orcamento_id: string
+          preco_unitario?: number
+          produto_id?: string | null
+          quantidade?: number
+          subtotal?: number
+        }
+        Update: {
+          created_at?: string
+          descricao?: string
+          id?: string
+          orcamento_id?: string
+          preco_unitario?: number
+          produto_id?: string | null
+          quantidade?: number
+          subtotal?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orcamento_itens_orcamento_id_fkey"
+            columns: ["orcamento_id"]
+            isOneToOne: false
+            referencedRelation: "orcamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orcamento_itens_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orcamentos: {
+        Row: {
+          cliente_id: string
+          created_at: string
+          desconto: number
+          geo_endereco: string | null
+          geo_lat: number | null
+          geo_lng: number | null
+          id: string
+          numero: number
+          observacoes: string | null
+          owner_id: string
+          status: Database["public"]["Enums"]["orcamento_status"]
+          total: number
+          updated_at: string
+          validade: string | null
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string
+          desconto?: number
+          geo_endereco?: string | null
+          geo_lat?: number | null
+          geo_lng?: number | null
+          id?: string
+          numero?: number
+          observacoes?: string | null
+          owner_id: string
+          status?: Database["public"]["Enums"]["orcamento_status"]
+          total?: number
+          updated_at?: string
+          validade?: string | null
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string
+          desconto?: number
+          geo_endereco?: string | null
+          geo_lat?: number | null
+          geo_lng?: number | null
+          id?: string
+          numero?: number
+          observacoes?: string | null
+          owner_id?: string
+          status?: Database["public"]["Enums"]["orcamento_status"]
+          total?: number
+          updated_at?: string
+          validade?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orcamentos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pedido_itens: {
+        Row: {
+          created_at: string
+          descricao: string
+          id: string
+          pedido_id: string
+          preco_unitario: number
+          produto_id: string | null
+          quantidade: number
+          subtotal: number
+        }
+        Insert: {
+          created_at?: string
+          descricao: string
+          id?: string
+          pedido_id: string
+          preco_unitario?: number
+          produto_id?: string | null
+          quantidade?: number
+          subtotal?: number
+        }
+        Update: {
+          created_at?: string
+          descricao?: string
+          id?: string
+          pedido_id?: string
+          preco_unitario?: number
+          produto_id?: string | null
+          quantidade?: number
+          subtotal?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pedido_itens_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "pedidos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pedido_itens_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pedidos: {
+        Row: {
+          cliente_id: string
+          created_at: string
+          desconto: number
+          geo_endereco: string | null
+          geo_lat: number | null
+          geo_lng: number | null
+          id: string
+          numero: number
+          observacoes: string | null
+          orcamento_id: string | null
+          owner_id: string
+          status: Database["public"]["Enums"]["pedido_status"]
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string
+          desconto?: number
+          geo_endereco?: string | null
+          geo_lat?: number | null
+          geo_lng?: number | null
+          id?: string
+          numero?: number
+          observacoes?: string | null
+          orcamento_id?: string | null
+          owner_id: string
+          status?: Database["public"]["Enums"]["pedido_status"]
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string
+          desconto?: number
+          geo_endereco?: string | null
+          geo_lat?: number | null
+          geo_lng?: number | null
+          id?: string
+          numero?: number
+          observacoes?: string | null
+          orcamento_id?: string | null
+          owner_id?: string
+          status?: Database["public"]["Enums"]["pedido_status"]
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pedidos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pedidos_orcamento_id_fkey"
+            columns: ["orcamento_id"]
+            isOneToOne: false
+            referencedRelation: "orcamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      produtos: {
+        Row: {
+          ativo: boolean
+          categoria: string | null
+          created_at: string
+          descricao: string | null
+          estoque: number
+          id: string
+          nome: string
+          owner_id: string
+          preco: number
+          sku: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          categoria?: string | null
+          created_at?: string
+          descricao?: string | null
+          estoque?: number
+          id?: string
+          nome: string
+          owner_id: string
+          preco?: number
+          sku?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          categoria?: string | null
+          created_at?: string
+          descricao?: string | null
+          estoque?: number
+          id?: string
+          nome?: string
+          owner_id?: string
+          preco?: number
+          sku?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          id: string
+          nome: string
+          telefone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          id?: string
+          nome: string
+          telefone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          id?: string
+          nome?: string
+          telefone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "vendedor"
+      funil_estagio:
+        | "lead"
+        | "qualificado"
+        | "proposta"
+        | "negociacao"
+        | "ganho"
+        | "perdido"
+      orcamento_status:
+        | "rascunho"
+        | "enviado"
+        | "aprovado"
+        | "rejeitado"
+        | "expirado"
+      pedido_status:
+        | "novo"
+        | "confirmado"
+        | "em_separacao"
+        | "faturado"
+        | "enviado"
+        | "entregue"
+        | "cancelado"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +633,32 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "vendedor"],
+      funil_estagio: [
+        "lead",
+        "qualificado",
+        "proposta",
+        "negociacao",
+        "ganho",
+        "perdido",
+      ],
+      orcamento_status: [
+        "rascunho",
+        "enviado",
+        "aprovado",
+        "rejeitado",
+        "expirado",
+      ],
+      pedido_status: [
+        "novo",
+        "confirmado",
+        "em_separacao",
+        "faturado",
+        "enviado",
+        "entregue",
+        "cancelado",
+      ],
+    },
   },
 } as const
