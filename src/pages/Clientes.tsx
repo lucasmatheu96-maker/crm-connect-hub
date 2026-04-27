@@ -74,10 +74,14 @@ export default function Clientes() {
       toast.success("Cliente atualizado");
     } else {
       toast.info("Capturando localização...");
-      const geo = await captureLocation();
+      const fallback = [form.endereco, form.cidade, form.estado, form.cep, "Brasil"]
+        .filter(Boolean).join(", ");
+      const geo = await captureLocation(fallback);
       const { error } = await supabase.from("clientes").insert({ ...payload, ...geo });
       if (error) { toast.error(error.message); setBusy(false); return; }
-      toast.success(geo.geo_lat ? "Cliente cadastrado com localização" : "Cliente cadastrado (sem GPS)");
+      if (geo.geo_lat && geo.geo_endereco) toast.success("Cliente cadastrado com localização (GPS ou endereço)");
+      else if (geo.geo_lat) toast.success("Cliente cadastrado com coordenadas");
+      else toast.warning("Cliente cadastrado, mas sem localização (GPS negado e endereço não localizado)");
     }
     setBusy(false); setOpen(false); load();
   };
@@ -183,7 +187,7 @@ export default function Clientes() {
             {!editing && (
               <div className="sm:col-span-2 flex items-start gap-2 rounded-lg bg-accent-soft p-3 text-xs text-accent">
                 <MapPin className="h-4 w-4 shrink-0 mt-0.5" />
-                <span>Ao salvar, capturaremos sua localização atual via GPS para registrar onde o cadastro foi feito.</span>
+                <span>Ao salvar, capturaremos sua localização via GPS. Se o GPS for negado (ex: desktop), usaremos o endereço informado acima para localizar no mapa.</span>
               </div>
             )}
             <DialogFooter className="sm:col-span-2">

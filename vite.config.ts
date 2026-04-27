@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
+import { VitePWA } from "vite-plugin-pwa";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -12,7 +13,37 @@ export default defineConfig(({ mode }) => ({
       overlay: false,
     },
   },
-  plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
+  plugins: [
+    react(),
+    mode === "development" && componentTagger(),
+    VitePWA({
+      registerType: "autoUpdate",
+      includeAssets: ["favicon.ico", "robots.txt", "icon-512.png"],
+      manifest: {
+        name: "MedControl CRM",
+        short_name: "MedControl",
+        description: "CRM completo MedControl: clientes, orçamentos, pedidos e funil de vendas com geolocalização.",
+        theme_color: "#1d4ed8",
+        background_color: "#ffffff",
+        display: "standalone",
+        orientation: "portrait",
+        start_url: "/",
+        scope: "/",
+        lang: "pt-BR",
+        icons: [
+          { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+          { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+        ],
+      },
+      workbox: {
+        navigateFallbackDenylist: [/^\/~oauth/, /^\/auth/],
+        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+      },
+      devOptions: {
+        enabled: false,
+      },
+    }),
+  ].filter(Boolean),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

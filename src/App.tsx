@@ -14,6 +14,7 @@ import Orcamentos from "./pages/Orcamentos";
 import Pedidos from "./pages/Pedidos";
 import Funil from "./pages/Funil";
 import Configuracoes from "./pages/Configuracoes";
+import Install from "./pages/Install";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/auth" element={<Auth />} />
+            <Route path="/install" element={<Install />} />
             <Route path="/" element={<Protected><Index /></Protected>} />
             <Route path="/clientes" element={<Protected><Clientes /></Protected>} />
             <Route path="/produtos" element={<Protected><Produtos /></Protected>} />
