@@ -1,6 +1,9 @@
 // Sincroniza tabelas do CRM para uma planilha do Google Sheets
 // deno-lint-ignore-file no-explicit-any
-import { corsHeaders } from "@supabase/supabase-js/cors";
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_sheets/v4";
