@@ -6,7 +6,7 @@ export interface GeoCapture {
   geo_endereco: string | null;
 }
 
-function hasCoordinates(lat: unknown, lng: unknown): lat is number & typeof lng {
+function hasCoordinates(lat: unknown, lng: unknown) {
   return typeof lat === "number" && Number.isFinite(lat) && typeof lng === "number" && Number.isFinite(lng);
 }
 
@@ -76,10 +76,11 @@ export async function captureLocation(fallbackAddress?: string | null): Promise<
   const lat = position.coords.latitude;
   const lng = position.coords.longitude;
   const endereco = await reverseGeocode(lat, lng);
+  const fallbackText = fallbackAddress?.trim() || `Lat ${lat.toFixed(6)}, Lng ${lng.toFixed(6)}`;
 
   return {
     geo_lat: lat,
     geo_lng: lng,
-    geo_endereco: endereco ?? fallbackAddress?.trim() || `Lat ${lat.toFixed(6)}, Lng ${lng.toFixed(6)}`,
+    geo_endereco: endereco ?? fallbackText,
   };
 }
