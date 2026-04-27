@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
-  LayoutDashboard, Users, Package, FileText, ShoppingCart, Trello, Settings, LogOut,
+  LayoutDashboard, Users, Package, FileText, ShoppingCart, Trello, Settings, LogOut, Smartphone, Download,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
@@ -83,6 +83,21 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
               Configurações
             </NavLink>
           )}
+
+          <NavLink
+            to="/install"
+            className={({ isActive }) =>
+              cn(
+                "mt-2 flex items-center gap-3 rounded-lg border border-dashed border-sidebar-border/60 px-3 py-2.5 text-sm font-medium transition-colors",
+                isActive
+                  ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-soft"
+                  : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+              )
+            }
+          >
+            <Smartphone className="h-4 w-4" />
+            Baixar Aplicativo Mobile
+          </NavLink>
         </nav>
 
         <div className="border-t border-sidebar-border p-3">
@@ -122,6 +137,10 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
                   <span className="text-xs text-muted-foreground">{user?.email}</span>
                 </div>
               </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => (window.location.href = "/install")}>
+                <Download className="mr-2 h-4 w-4" /> Baixar Aplicativo Mobile
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={signOut} className="text-destructive">
                 <LogOut className="mr-2 h-4 w-4" /> Sair
