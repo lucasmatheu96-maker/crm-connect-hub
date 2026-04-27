@@ -14,6 +14,7 @@ import Orcamentos from "./pages/Orcamentos";
 import Pedidos from "./pages/Pedidos";
 import Funil from "./pages/Funil";
 import Configuracoes from "./pages/Configuracoes";
+import Usuarios from "./pages/Usuarios";
 import Install from "./pages/Install";
 import NotFound from "./pages/NotFound";
 
@@ -40,6 +41,7 @@ const App = () => (
             <Route path="/pedidos" element={<Protected><Pedidos /></Protected>} />
             <Route path="/funil" element={<Protected><Funil /></Protected>} />
             <Route path="/configuracoes" element={<Protected admin><Configuracoes /></Protected>} />
+            <Route path="/usuarios" element={<Protected admin><Usuarios /></Protected>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
