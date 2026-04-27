@@ -6,6 +6,10 @@ export interface GeoCapture {
   geo_endereco: string | null;
 }
 
+function hasCoordinates(lat: unknown, lng: unknown) {
+  return typeof lat === "number" && Number.isFinite(lat) && typeof lng === "number" && Number.isFinite(lng);
+}
+
 /** Reverse geocoding (coordenadas → endereço) */
 async function reverseGeocode(lat: number, lng: number): Promise<string | null> {
   try {
@@ -24,7 +28,7 @@ async function forwardGeocode(address: string): Promise<GeoCapture> {
     const { data } = await supabase.functions.invoke("reverse-geocode", {
       body: { address },
     });
-    if (data?.lat && data?.lng) {
+    if (hasCoordinates(data?.lat, data?.lng)) {
       return { geo_lat: data.lat, geo_lng: data.lng, geo_endereco: data.address ?? address };
     }
   } catch {
@@ -72,6 +76,11 @@ export async function captureLocation(fallbackAddress?: string | null): Promise<
   const lat = position.coords.latitude;
   const lng = position.coords.longitude;
   const endereco = await reverseGeocode(lat, lng);
+  const fallbackText = fallbackAddress?.trim() || `Lat ${lat.toFixed(6)}, Lng ${lng.toFixed(6)}`;
 
-  return { geo_lat: lat, geo_lng: lng, geo_endereco: endereco };
+  return {
+    geo_lat: lat,
+    geo_lng: lng,
+    geo_endereco: endereco ?? fallbackText,
+  };
 }

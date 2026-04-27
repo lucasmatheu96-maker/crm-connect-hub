@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Users, MapPin, Search, Pencil, Trash2, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { fmtDate } from "@/lib/format";
+import { openMapLocation } from "@/lib/maps";
 
 const schema = z.object({
   nome: z.string().trim().min(2, "Nome obrigatório").max(120),
@@ -97,6 +98,13 @@ export default function Clientes() {
     return !q || c.nome.toLowerCase().includes(q) || (c.empresa || "").toLowerCase().includes(q) || (c.email || "").toLowerCase().includes(q);
   });
 
+  const handleOpenMap = async (lat: number, lng: number) => {
+    const { opened } = await openMapLocation(lat, lng);
+    if (!opened) {
+      toast.info("Não foi possível abrir o mapa aqui. Copiamos o link para você colar no navegador.");
+    }
+  };
+
   return (
     <div>
       <PageHeader
@@ -140,16 +148,16 @@ export default function Clientes() {
                       <div className="text-muted-foreground">{c.telefone || ""}</div>
                     </TableCell>
                     <TableCell>
-                      {c.geo_lat ? (
-                        <a
-                          href={`https://www.google.com/maps?q=${c.geo_lat},${c.geo_lng}`}
-                          target="_blank" rel="noreferrer"
-                          className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                      {c.geo_lat && c.geo_lng ? (
+                        <button
+                          type="button"
+                          onClick={() => handleOpenMap(c.geo_lat!, c.geo_lng!)}
+                          className="inline-flex items-center gap-1 text-left text-xs text-primary hover:underline"
                         >
                           <MapPin className="h-3 w-3" />
                           {c.geo_endereco ? (c.geo_endereco.length > 40 ? c.geo_endereco.slice(0,40)+"..." : c.geo_endereco) : "Ver no mapa"}
                           <ExternalLink className="h-3 w-3" />
-                        </a>
+                        </button>
                       ) : <span className="text-xs text-muted-foreground">Sem GPS</span>}
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">{fmtDate(c.created_at)}</TableCell>

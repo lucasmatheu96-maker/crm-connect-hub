@@ -16,6 +16,7 @@ import { Plus, FileText, Pencil, Trash2, MapPin, ArrowRight } from "lucide-react
 import { toast } from "sonner";
 import { fmtMoney, fmtDate } from "@/lib/format";
 import { ItensEditor, Item } from "@/components/ItensEditor";
+import { openMapLocation } from "@/lib/maps";
 
 const STATUSES = ["rascunho","enviado","aprovado","rejeitado","expirado"] as const;
 const statusColor: Record<string, string> = {
@@ -43,9 +44,15 @@ export default function Orcamentos() {
     setLoading(true);
     const [{ data: orcs }, { data: cls }] = await Promise.all([
       supabase.from("orcamentos").select("*, clientes(nome)").order("created_at", { ascending: false }),
-      supabase.from("clientes").select("id, nome").order("nome"),
+      supabase.from("clientes").select("id, nome, endereco, cidade, estado, cep").order("nome"),
     ]);
     setList(orcs || []); setClientes(cls || []); setLoading(false);
+  };
+
+  const getClienteFallbackAddress = (clienteId?: string | null) => {
+    const cliente = clientes.find((item) => item.id === clienteId);
+    if (!cliente) return null;
+    return [cliente.endereco, cliente.cidade, cliente.estado, cliente.cep, "Brasil"].filter(Boolean).join(", ") || null;
   };
 
   const openNew = () => { setEditing(null); setForm({ status: "rascunho", desconto: 0 }); setItens([]); setOpen(true); };
@@ -82,7 +89,7 @@ export default function Orcamentos() {
       await supabase.from("orcamento_itens").delete().eq("orcamento_id", editing.id);
     } else {
       toast.info("Capturando localização...");
-      const geo = await captureLocation();
+      const geo = await captureLocation(getClienteFallbackAddress(form.cliente_id));
       const { data, error } = await supabase.from("orcamentos").insert({ ...payload, ...geo }).select("id").single();
       if (error) { toast.error(error.message); setBusy(false); return; }
       orcamentoId = data.id;
@@ -112,7 +119,7 @@ export default function Orcamentos() {
   const converterEmPedido = async (o: any) => {
     if (!confirm(`Converter orçamento #${o.numero} em pedido?`)) return;
     const { data: itensData } = await supabase.from("orcamento_itens").select("*").eq("orcamento_id", o.id);
-    const geo = await captureLocation();
+    const geo = await captureLocation(getClienteFallbackAddress(o.cliente_id));
     const { data: ped, error } = await supabase.from("pedidos").insert({
       cliente_id: o.cliente_id, orcamento_id: o.id, owner_id: user!.id,
       desconto: o.desconto, total: o.total, observacoes: o.observacoes,
@@ -128,6 +135,11 @@ export default function Orcamentos() {
     await supabase.from("orcamentos").update({ status: "aprovado" }).eq("id", o.id);
     toast.success("Pedido criado a partir do orçamento");
     load();
+  };
+
+  const handleOpenMap = async (lat: number, lng: number) => {
+    const { opened } = await openMapLocation(lat, lng);
+    if (!opened) toast.info("Não foi possível abrir o mapa aqui. Copiamos o link para você colar no navegador.");
   };
 
   return (
@@ -160,7 +172,7 @@ export default function Orcamentos() {
                     <TableCell><Badge className={statusColor[o.status]}>{o.status}</Badge></TableCell>
                     <TableCell className="text-xs">{fmtDate(o.validade)}</TableCell>
                     <TableCell className="text-right font-semibold">{fmtMoney(o.total)}</TableCell>
-                    <TableCell>{o.geo_lat ? <a href={`https://www.google.com/maps?q=${o.geo_lat},${o.geo_lng}`} target="_blank" rel="noreferrer"><MapPin className="h-4 w-4 text-primary" /></a> : <span className="text-xs text-muted-foreground">—</span>}</TableCell>
+                    <TableCell>{o.geo_lat && o.geo_lng ? <button type="button" onClick={() => handleOpenMap(o.geo_lat, o.geo_lng)}><MapPin className="h-4 w-4 text-primary" /></button> : <span className="text-xs text-muted-foreground">—</span>}</TableCell>
                     <TableCell className="text-xs text-muted-foreground">{fmtDate(o.created_at)}</TableCell>
                     <TableCell>
                       <div className="flex gap-1">
