@@ -27,7 +27,7 @@ import {
   UserPlus, Trash2, ShieldCheck, ShieldOff, Pencil, RefreshCw, Activity,
   CheckCircle2, XCircle, Clock, Ban, Mail,
 } from "lucide-react";
-import { formatDateTime } from "@/lib/format";
+import { fmtDateTime } from "@/lib/format";
 
 type Status = "pendente" | "ativo" | "bloqueado";
 type Role = "admin" | "vendedor";
