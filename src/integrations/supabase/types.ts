@@ -136,6 +136,7 @@ export type Database = {
           nome: string
           observacoes: string | null
           owner_id: string
+          source: string
           telefone: string | null
           updated_at: string
         }
@@ -155,6 +156,7 @@ export type Database = {
           nome: string
           observacoes?: string | null
           owner_id: string
+          source?: string
           telefone?: string | null
           updated_at?: string
         }
@@ -174,6 +176,7 @@ export type Database = {
           nome?: string
           observacoes?: string | null
           owner_id?: string
+          source?: string
           telefone?: string | null
           updated_at?: string
         }
@@ -301,6 +304,7 @@ export type Database = {
           numero: number
           observacoes: string | null
           owner_id: string
+          source: string
           status: Database["public"]["Enums"]["orcamento_status"]
           total: number
           updated_at: string
@@ -317,6 +321,7 @@ export type Database = {
           numero?: number
           observacoes?: string | null
           owner_id: string
+          source?: string
           status?: Database["public"]["Enums"]["orcamento_status"]
           total?: number
           updated_at?: string
@@ -333,6 +338,7 @@ export type Database = {
           numero?: number
           observacoes?: string | null
           owner_id?: string
+          source?: string
           status?: Database["public"]["Enums"]["orcamento_status"]
           total?: number
           updated_at?: string
@@ -409,6 +415,7 @@ export type Database = {
           observacoes: string | null
           orcamento_id: string | null
           owner_id: string
+          source: string
           status: Database["public"]["Enums"]["pedido_status"]
           total: number
           updated_at: string
@@ -425,6 +432,7 @@ export type Database = {
           observacoes?: string | null
           orcamento_id?: string | null
           owner_id: string
+          source?: string
           status?: Database["public"]["Enums"]["pedido_status"]
           total?: number
           updated_at?: string
@@ -441,6 +449,7 @@ export type Database = {
           observacoes?: string | null
           orcamento_id?: string | null
           owner_id?: string
+          source?: string
           status?: Database["public"]["Enums"]["pedido_status"]
           total?: number
           updated_at?: string
@@ -474,6 +483,7 @@ export type Database = {
           owner_id: string
           preco: number
           sku: string | null
+          source: string
           updated_at: string
         }
         Insert: {
@@ -487,6 +497,7 @@ export type Database = {
           owner_id: string
           preco?: number
           sku?: string | null
+          source?: string
           updated_at?: string
         }
         Update: {
@@ -500,6 +511,7 @@ export type Database = {
           owner_id?: string
           preco?: number
           sku?: string | null
+          source?: string
           updated_at?: string
         }
         Relationships: []
