@@ -17,6 +17,7 @@ import { Plus, Users, MapPin, Search, Pencil, Trash2, ExternalLink } from "lucid
 import { toast } from "sonner";
 import { fmtDate } from "@/lib/format";
 import { openMapLocation } from "@/lib/maps";
+import { offlineInsert, offlineUpdate, offlineDelete } from "@/lib/offlineWrite";
 
 const schema = z.object({
   nome: z.string().trim().min(2, "Nome obrigatório").max(120),
