@@ -20,6 +20,7 @@ import { openMapLocation } from "@/lib/maps";
 import { offlineInsert, offlineUpdate, offlineDelete } from "@/lib/offlineWrite";
 
 const schema = z.object({
+  codigo_externo: z.string().trim().max(40).optional().or(z.literal("")),
   nome: z.string().trim().min(2, "Nome obrigatório").max(120),
   empresa: z.string().trim().max(120).optional().or(z.literal("")),
   cpf_cnpj: z.string().trim().max(20).optional().or(z.literal("")),
@@ -35,12 +36,14 @@ const schema = z.object({
 type Cliente = {
   id: string; nome: string; empresa: string | null; email: string | null;
   telefone: string | null; cidade: string | null; estado: string | null;
+  codigo_externo: string | null;
   geo_lat: number | null; geo_lng: number | null; geo_endereco: string | null;
   created_at: string;
 };
 
 export default function Clientes() {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
+  const isAdmin = role === "admin";
   const [list, setList] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
