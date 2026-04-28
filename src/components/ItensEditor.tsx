@@ -4,9 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2 } from "lucide-react";
 import { fmtMoney } from "@/lib/format";
+import { SearchableSelect } from "@/components/SearchableSelect";
 
 export interface Item {
   produto_id?: string | null;
@@ -21,7 +21,7 @@ export function ItensEditor({
   const [produtos, setProdutos] = useState<any[]>([]);
 
   useEffect(() => {
-    supabase.from("produtos").select("id, nome, preco").eq("ativo", true).then(({ data }) => setProdutos(data || []));
+    supabase.from("produtos").select("id, nome, sku, preco").eq("ativo", true).order("nome").then(({ data }) => setProdutos(data || []));
   }, []);
 
   const addItem = () => onChange([...itens, { descricao: "", quantidade: 1, preco_unitario: 0, produto_id: null }]);
@@ -49,12 +49,13 @@ export function ItensEditor({
         {itens.map((it, i) => (
           <div key={i} className="grid grid-cols-12 gap-2 rounded-lg border p-2">
             <div className="col-span-12 sm:col-span-4">
-              <Select value={it.produto_id || ""} onValueChange={(v) => onProduto(i, v)}>
-                <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="Selecione produto..." /></SelectTrigger>
-                <SelectContent>
-                  {produtos.map((p) => <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                options={produtos.map((p) => ({ value: p.id, label: p.nome, hint: p.sku || undefined }))}
+                value={it.produto_id || ""}
+                onChange={(v) => onProduto(i, v)}
+                placeholder="Buscar produto..."
+                triggerClassName="h-9 text-xs"
+              />
             </div>
             <Input className="col-span-6 sm:col-span-3 h-9 text-xs" placeholder="Descrição" value={it.descricao} onChange={(e) => update(i, { descricao: e.target.value })} />
             <Input className="col-span-3 sm:col-span-1 h-9 text-xs" type="number" min="0" step="0.01" value={it.quantidade} onChange={(e) => update(i, { quantidade: Number(e.target.value) })} />

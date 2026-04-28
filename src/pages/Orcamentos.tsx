@@ -18,6 +18,7 @@ import { fmtMoney, fmtDate } from "@/lib/format";
 import { ItensEditor, Item } from "@/components/ItensEditor";
 import { openMapLocation } from "@/lib/maps";
 import { offlineInsert, offlineUpdate, offlineDelete } from "@/lib/offlineWrite";
+import { SearchableSelect } from "@/components/SearchableSelect";
 
 const STATUSES = ["rascunho","enviado","aprovado","rejeitado","expirado"] as const;
 const statusColor: Record<string, string> = {
@@ -29,7 +30,8 @@ const statusColor: Record<string, string> = {
 };
 
 export default function Orcamentos() {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
+  const isAdmin = role === "admin";
   const [list, setList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
@@ -45,7 +47,7 @@ export default function Orcamentos() {
     setLoading(true);
     const [{ data: orcs }, { data: cls }] = await Promise.all([
       supabase.from("orcamentos").select("*, clientes(nome)").order("created_at", { ascending: false }),
-      supabase.from("clientes").select("id, nome, endereco, cidade, estado, cep").order("nome"),
+      supabase.from("clientes").select("id, nome, codigo_externo, empresa, endereco, cidade, estado, cep").order("nome"),
     ]);
     setList(orcs || []); setClientes(cls || []); setLoading(false);
   };
@@ -183,12 +185,14 @@ export default function Orcamentos() {
                   </div>
                 </div>
                 <div className="mt-3 flex items-center justify-between border-t pt-2">
-                  {o.geo_lat && o.geo_lng ? (
-                    <button type="button" onClick={() => handleOpenMap(o.geo_lat, o.geo_lng)}
-                      className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
-                      <MapPin className="h-3 w-3" /> Mapa
-                    </button>
-                  ) : <span className="text-xs text-muted-foreground">Sem GPS</span>}
+                  {isAdmin ? (
+                    o.geo_lat && o.geo_lng ? (
+                      <button type="button" onClick={() => handleOpenMap(o.geo_lat, o.geo_lng)}
+                        className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+                        <MapPin className="h-3 w-3" /> Mapa
+                      </button>
+                    ) : <span className="text-xs text-muted-foreground">Sem GPS</span>
+                  ) : <span />}
                   <div className="flex gap-0.5">
                     <Button size="sm" variant="ghost" title="Converter em pedido" onClick={() => converterEmPedido(o)}><ArrowRight className="h-4 w-4 text-success" /></Button>
                     <Button size="sm" variant="ghost" onClick={() => openEdit(o)}><Pencil className="h-4 w-4" /></Button>
@@ -208,10 +212,16 @@ export default function Orcamentos() {
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="space-y-2 sm:col-span-2">
                 <Label>Cliente *</Label>
-                <Select value={form.cliente_id || ""} onValueChange={(v) => setForm({ ...form, cliente_id: v })}>
-                  <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
-                  <SelectContent>{clientes.map((c) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}</SelectContent>
-                </Select>
+                <SearchableSelect
+                  options={clientes.map((c) => ({
+                    value: c.id,
+                    label: c.nome,
+                    hint: [c.codigo_externo && `#${c.codigo_externo}`, c.empresa, [c.cidade, c.estado].filter(Boolean).join("/")].filter(Boolean).join(" · "),
+                  }))}
+                  value={form.cliente_id}
+                  onChange={(v) => setForm({ ...form, cliente_id: v })}
+                  placeholder="Buscar cliente por nome, código ou cidade..."
+                />
               </div>
               <div className="space-y-2">
                 <Label>Status</Label>
@@ -226,7 +236,7 @@ export default function Orcamentos() {
 
             <ItensEditor itens={itens} onChange={setItens} />
 
-            {!editing && <div className="flex items-start gap-2 rounded-lg bg-accent-soft p-3 text-xs text-accent"><MapPin className="h-4 w-4 shrink-0 mt-0.5" /><span>Localização atual será capturada ao salvar.</span></div>}
+            {!editing && isAdmin && <div className="flex items-start gap-2 rounded-lg bg-accent-soft p-3 text-xs text-accent"><MapPin className="h-4 w-4 shrink-0 mt-0.5" /><span>Localização atual será capturada ao salvar.</span></div>}
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>

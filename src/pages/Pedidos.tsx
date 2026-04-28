@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { fmtMoney, fmtDate } from "@/lib/format";
 import { ItensEditor, Item } from "@/components/ItensEditor";
 import { offlineUpdate, offlineDelete } from "@/lib/offlineWrite";
+import { SearchableSelect } from "@/components/SearchableSelect";
 
 const STATUSES = ["novo","confirmado","em_separacao","faturado","enviado","entregue","cancelado"] as const;
 const statusColor: Record<string, string> = {
@@ -45,7 +46,7 @@ export default function Pedidos() {
     setLoading(true);
     const [{ data: peds }, { data: cls }] = await Promise.all([
       supabase.from("pedidos").select("*, clientes(nome)").order("created_at", { ascending: false }),
-      supabase.from("clientes").select("id, nome").order("nome"),
+      supabase.from("clientes").select("id, nome, codigo_externo, empresa, cidade, estado").order("nome"),
     ]);
     setList(peds || []); setClientes(cls || []); setLoading(false);
   };
@@ -121,7 +122,7 @@ export default function Pedidos() {
                   </div>
                   <div className="text-right text-xs text-muted-foreground">
                     {fmtDate(p.created_at)}
-                    {p.geo_lat && (
+                    {isAdmin && p.geo_lat && (
                       <a href={`https://www.google.com/maps?q=${p.geo_lat},${p.geo_lng}`} target="_blank" rel="noreferrer" className="ml-2 inline-flex">
                         <MapPin className="h-3 w-3 text-primary" />
                       </a>
@@ -147,10 +148,16 @@ export default function Pedidos() {
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="space-y-2 sm:col-span-2">
                 <Label>Cliente *</Label>
-                <Select value={form.cliente_id || ""} onValueChange={(v) => setForm({ ...form, cliente_id: v })}>
-                  <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
-                  <SelectContent>{clientes.map((c) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}</SelectContent>
-                </Select>
+                <SearchableSelect
+                  options={clientes.map((c) => ({
+                    value: c.id,
+                    label: c.nome,
+                    hint: [c.codigo_externo && `#${c.codigo_externo}`, c.empresa, [c.cidade, c.estado].filter(Boolean).join("/")].filter(Boolean).join(" · "),
+                  }))}
+                  value={form.cliente_id}
+                  onChange={(v) => setForm({ ...form, cliente_id: v })}
+                  placeholder="Buscar cliente..."
+                />
               </div>
               <div className="space-y-2">
                 <Label>Status</Label>
