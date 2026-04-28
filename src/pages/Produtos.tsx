@@ -55,10 +55,9 @@ export default function Produtos() {
     setBusy(true);
     const payload: any = { ...parsed.data, owner_id: user!.id };
     Object.keys(payload).forEach((k) => payload[k] === "" && (payload[k] = null));
-    const op = editing
-      ? supabase.from("produtos").update(payload).eq("id", editing.id)
-      : supabase.from("produtos").insert(payload);
-    const { error } = await op;
+    const { error } = editing
+      ? await offlineUpdate("produtos", payload, { column: "id", value: editing.id })
+      : await offlineInsert("produtos", payload);
     setBusy(false);
     if (error) toast.error(error.message);
     else { toast.success(editing ? "Atualizado" : "Cadastrado"); setOpen(false); load(); }
@@ -66,7 +65,7 @@ export default function Produtos() {
 
   const remove = async (id: string) => {
     if (!confirm("Excluir produto?")) return;
-    const { error } = await supabase.from("produtos").delete().eq("id", id);
+    const { error } = await offlineDelete("produtos", { column: "id", value: id });
     if (error) toast.error(error.message); else { toast.success("Excluído"); load(); }
   };
 
