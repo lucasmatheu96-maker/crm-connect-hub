@@ -36,6 +36,8 @@ export default function Orcamentos() {
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [clientes, setClientes] = useState<any[]>([]);
+  const [vendedores, setVendedores] = useState<any[]>([]);
+  const [filtroVendedor, setFiltroVendedor] = useState<string>("todos");
   const [editing, setEditing] = useState<any>(null);
   const [form, setForm] = useState<any>({ status: "rascunho", desconto: 0 });
   const [itens, setItens] = useState<Item[]>([]);
@@ -45,15 +47,19 @@ export default function Orcamentos() {
 
   const load = async () => {
     setLoading(true);
-    const [{ data: orcs }, { data: cls }, { data: peds }] = await Promise.all([
+    const [{ data: orcs }, { data: cls }, { data: peds }, { data: profs }] = await Promise.all([
       supabase.from("orcamentos").select("*, clientes(nome)").order("created_at", { ascending: false }),
       supabase.from("clientes").select("id, nome, codigo_externo, empresa, endereco, cidade, estado, cep").order("nome"),
       supabase.from("pedidos").select("orcamento_id").not("orcamento_id", "is", null),
+      supabase.from("profiles").select("user_id, nome").order("nome"),
     ]);
     const pedidoOrcIds = new Set((peds || []).map((p: any) => p.orcamento_id));
-    const enriched = (orcs || []).map((o: any) => ({ ...o, _temPedido: pedidoOrcIds.has(o.id) }));
-    setList(enriched); setClientes(cls || []); setLoading(false);
+    const profMap = new Map((profs || []).map((p: any) => [p.user_id, p.nome]));
+    const enriched = (orcs || []).map((o: any) => ({ ...o, _temPedido: pedidoOrcIds.has(o.id), _vendedorNome: profMap.get(o.owner_id) || "—" }));
+    setList(enriched); setClientes(cls || []); setVendedores(profs || []); setLoading(false);
   };
+
+  const listFiltrada = filtroVendedor === "todos" ? list : list.filter((o) => o.owner_id === filtroVendedor);
 
   const getClienteFallbackAddress = (clienteId?: string | null) => {
     const cliente = clientes.find((item) => item.id === clienteId);
@@ -171,16 +177,30 @@ export default function Orcamentos() {
       <PageHeader title="Orçamentos" description="Propostas comerciais e cotações" actions={<Button variant="brand" onClick={openNew}><Plus className="h-4 w-4" /> Novo orçamento</Button>} />
 
       <Card className="p-4 shadow-elevated">
+        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="text-sm text-muted-foreground">{listFiltrada.length} orçamento(s)</div>
+          <div className="flex items-center gap-2">
+            <Label className="text-xs whitespace-nowrap">Vendedor:</Label>
+            <Select value={filtroVendedor} onValueChange={setFiltroVendedor}>
+              <SelectTrigger className="h-9 w-full sm:w-56"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos</SelectItem>
+                {vendedores.map((v) => <SelectItem key={v.user_id} value={v.user_id}>{v.nome}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
         {loading ? <div className="py-8 text-center text-sm text-muted-foreground">Carregando...</div>
-          : list.length === 0 ? <EmptyState icon={FileText} title="Nenhum orçamento" description="Crie propostas comerciais com itens e valores." action={<Button variant="brand" onClick={openNew}><Plus className="h-4 w-4" /> Novo orçamento</Button>} />
+          : listFiltrada.length === 0 ? <EmptyState icon={FileText} title="Nenhum orçamento" description="Crie propostas comerciais com itens e valores." action={<Button variant="brand" onClick={openNew}><Plus className="h-4 w-4" /> Novo orçamento</Button>} />
           : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {list.map((o) => (
+            {listFiltrada.map((o) => (
               <Card key={o.id} className="p-4 hover:shadow-elevated transition-shadow">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <div className="font-mono text-xs text-muted-foreground">#{o.numero}</div>
                     <div className="font-medium truncate">{o.clientes?.nome || "—"}</div>
+                    <div className="text-xs text-muted-foreground truncate">Vend.: {o._vendedorNome}</div>
                   </div>
                   <Badge className={`${statusColor[o.status]} shrink-0`}>{o.status}</Badge>
                 </div>

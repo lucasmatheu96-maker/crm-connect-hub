@@ -49,17 +49,24 @@ export function SearchableSelect({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className={cn("p-0 w-[--radix-popover-trigger-width] min-w-[260px]", className)} align="start">
+      <PopoverContent
+        className={cn(
+          "p-0 w-[--radix-popover-trigger-width] min-w-[260px] max-w-[calc(100vw-1rem)]",
+          className
+        )}
+        align="start"
+        sideOffset={4}
+        collisionPadding={8}
+      >
         <Command
           filter={(val, search) => {
-            // val = "label · hint" (lowercased pelo cmdk); fazemos match flexível
             const q = search.toLowerCase().trim();
             if (!q) return 1;
             return val.toLowerCase().includes(q) ? 1 : 0;
           }}
         >
           <CommandInput placeholder="Digite para filtrar..." />
-          <CommandList>
+          <CommandList className="max-h-[min(60vh,320px)] overflow-y-auto overscroll-contain">
             <CommandEmpty>{emptyText}</CommandEmpty>
             <CommandGroup>
               {options.map((o) => (

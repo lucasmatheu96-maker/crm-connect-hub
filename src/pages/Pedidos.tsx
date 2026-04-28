@@ -34,6 +34,8 @@ export default function Pedidos() {
   const isAdmin = role === "admin";
   const [list, setList] = useState<any[]>([]);
   const [clientes, setClientes] = useState<any[]>([]);
+  const [vendedores, setVendedores] = useState<any[]>([]);
+  const [filtroVendedor, setFiltroVendedor] = useState<string>("todos");
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
@@ -44,12 +46,17 @@ export default function Pedidos() {
   useEffect(() => { load(); }, []);
   const load = async () => {
     setLoading(true);
-    const [{ data: peds }, { data: cls }] = await Promise.all([
+    const [{ data: peds }, { data: cls }, { data: profs }] = await Promise.all([
       supabase.from("pedidos").select("*, clientes(nome)").order("created_at", { ascending: false }),
       supabase.from("clientes").select("id, nome, codigo_externo, empresa, cidade, estado").order("nome"),
+      supabase.from("profiles").select("user_id, nome").order("nome"),
     ]);
-    setList(peds || []); setClientes(cls || []); setLoading(false);
+    const profMap = new Map((profs || []).map((p: any) => [p.user_id, p.nome]));
+    const enriched = (peds || []).map((p: any) => ({ ...p, _vendedorNome: profMap.get(p.owner_id) || "—" }));
+    setList(enriched); setClientes(cls || []); setVendedores(profs || []); setLoading(false);
   };
+
+  const listFiltrada = filtroVendedor === "todos" ? list : list.filter((p) => p.owner_id === filtroVendedor);
 
   const openEdit = async (p: any) => {
     if (!isAdmin) return;
@@ -102,16 +109,30 @@ export default function Pedidos() {
       <PageHeader title="Pedidos" description="Acompanhamento de vendas e entregas" />
 
       <Card className="p-4 shadow-elevated">
+        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="text-sm text-muted-foreground">{listFiltrada.length} pedido(s)</div>
+          <div className="flex items-center gap-2">
+            <Label className="text-xs whitespace-nowrap">Vendedor:</Label>
+            <Select value={filtroVendedor} onValueChange={setFiltroVendedor}>
+              <SelectTrigger className="h-9 w-full sm:w-56"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos</SelectItem>
+                {vendedores.map((v) => <SelectItem key={v.user_id} value={v.user_id}>{v.nome}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
         {loading ? <div className="py-8 text-center text-sm text-muted-foreground">Carregando...</div>
-          : list.length === 0 ? <EmptyState icon={ShoppingCart} title="Nenhum pedido" description="Pedidos são gerados a partir de orçamentos aprovados." />
+          : listFiltrada.length === 0 ? <EmptyState icon={ShoppingCart} title="Nenhum pedido" description="Pedidos são gerados a partir de orçamentos aprovados." />
           : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {list.map((p) => (
+            {listFiltrada.map((p) => (
               <Card key={p.id} className="p-4 hover:shadow-elevated transition-shadow">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <div className="font-mono text-xs text-muted-foreground">#{p.numero}</div>
                     <div className="font-medium truncate">{p.clientes?.nome || "—"}</div>
+                    <div className="text-xs text-muted-foreground truncate">Vend.: {p._vendedorNome}</div>
                   </div>
                   <Badge className={`${statusColor[p.status]} shrink-0`}>{p.status.replace("_"," ")}</Badge>
                 </div>
