@@ -72,28 +72,36 @@ export default function Pedidos() {
     };
     let pedidoId = editing?.id;
     if (editing) {
-      const { error } = await supabase.from("pedidos").update(payload).eq("id", editing.id);
+      const { error } = await offlineUpdate("pedidos", payload, { column: "id", value: editing.id });
       if (error) { toast.error(error.message); setBusy(false); return; }
-      await supabase.from("pedido_itens").delete().eq("pedido_id", editing.id);
+      if (navigator.onLine) {
+        await supabase.from("pedido_itens").delete().eq("pedido_id", editing.id);
+      } else {
+        await offlineDelete("pedido_itens", { column: "pedido_id", value: editing.id });
+      }
     } else {
-      toast.info("Capturando localização...");
+      if (navigator.onLine) toast.info("Capturando localização...");
       const geo = await captureLocation();
-      const { data, error } = await supabase.from("pedidos").insert({ ...payload, ...geo }).select("id").single();
+      pedidoId = (typeof crypto !== "undefined" && (crypto as any).randomUUID)
+        ? (crypto as any).randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const { error } = await offlineInsert("pedidos", { id: pedidoId, ...payload, ...geo });
       if (error) { toast.error(error.message); setBusy(false); return; }
-      pedidoId = data.id;
     }
-    await supabase.from("pedido_itens").insert(itens.map((i) => ({
-      pedido_id: pedidoId, produto_id: i.produto_id || null,
-      descricao: i.descricao || "Item", quantidade: i.quantidade,
-      preco_unitario: i.preco_unitario, subtotal: i.quantidade * i.preco_unitario,
-    })));
+    for (const i of itens) {
+      await offlineInsert("pedido_itens", {
+        pedido_id: pedidoId, produto_id: i.produto_id || null,
+        descricao: i.descricao || "Item", quantidade: i.quantidade,
+        preco_unitario: i.preco_unitario, subtotal: i.quantidade * i.preco_unitario,
+      });
+    }
     setBusy(false); setOpen(false); load();
     toast.success(editing ? "Pedido atualizado" : "Pedido criado");
   };
 
   const remove = async (id: string) => {
     if (!confirm("Excluir pedido?")) return;
-    const { error } = await supabase.from("pedidos").delete().eq("id", id);
+    const { error } = await offlineDelete("pedidos", { column: "id", value: id });
     if (error) toast.error(error.message); else { toast.success("Excluído"); load(); }
   };
 
