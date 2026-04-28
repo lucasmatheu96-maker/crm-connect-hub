@@ -14,6 +14,7 @@ import { Plus, MoreVertical, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { fmtMoney } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { SearchableSelect } from "@/components/SearchableSelect";
 
 const STAGES = [
   { id: "lead", label: "Lead", color: "bg-secondary" },
@@ -27,7 +28,8 @@ const STAGES = [
 type Stage = typeof STAGES[number]["id"];
 
 export default function Funil() {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
+  const isAdmin = role === "admin";
   const [items, setItems] = useState<any[]>([]);
   const [clientes, setClientes] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
@@ -39,7 +41,7 @@ export default function Funil() {
   const load = async () => {
     const [{ data: ops }, { data: cls }] = await Promise.all([
       supabase.from("oportunidades").select("*, clientes(nome)").order("posicao"),
-      supabase.from("clientes").select("id, nome").order("nome"),
+      supabase.from("clientes").select("id, nome, codigo_externo, empresa, cidade, estado").order("nome"),
     ]);
     setItems(ops || []); setClientes(cls || []);
   };
@@ -119,7 +121,7 @@ export default function Funil() {
                       <span className="text-sm font-bold text-primary">{fmtMoney(it.valor)}</span>
                       <span className="text-[10px] text-muted-foreground">{it.probabilidade}%</span>
                     </div>
-                    {it.geo_lat && (
+                    {isAdmin && it.geo_lat && (
                       <div className="mt-1 text-[10px] text-muted-foreground flex items-center gap-1">
                         <MapPin className="h-3 w-3" /> Localização registrada
                       </div>
@@ -140,10 +142,16 @@ export default function Funil() {
             <div className="sm:col-span-2 space-y-2"><Label>Título *</Label><Input value={form.titulo || ""} onChange={(e) => setForm({ ...form, titulo: e.target.value })} required maxLength={200} /></div>
             <div className="sm:col-span-2 space-y-2">
               <Label>Cliente</Label>
-              <Select value={form.cliente_id || ""} onValueChange={(v) => setForm({ ...form, cliente_id: v })}>
-                <SelectTrigger><SelectValue placeholder="Opcional" /></SelectTrigger>
-                <SelectContent>{clientes.map((c) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}</SelectContent>
-              </Select>
+              <SearchableSelect
+                options={clientes.map((c) => ({
+                  value: c.id,
+                  label: c.nome,
+                  hint: [c.codigo_externo && `#${c.codigo_externo}`, c.empresa, [c.cidade, c.estado].filter(Boolean).join("/")].filter(Boolean).join(" · "),
+                }))}
+                value={form.cliente_id}
+                onChange={(v) => setForm({ ...form, cliente_id: v })}
+                placeholder="Opcional — buscar cliente..."
+              />
             </div>
             <div className="space-y-2"><Label>Valor (R$)</Label><Input type="number" step="0.01" min="0" value={form.valor} onChange={(e) => setForm({ ...form, valor: e.target.value })} /></div>
             <div className="space-y-2">
