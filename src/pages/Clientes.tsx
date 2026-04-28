@@ -104,7 +104,10 @@ export default function Clientes() {
 
   const filtered = list.filter((c) => {
     const q = search.toLowerCase();
-    return !q || c.nome.toLowerCase().includes(q) || (c.empresa || "").toLowerCase().includes(q) || (c.email || "").toLowerCase().includes(q);
+    return !q || c.nome.toLowerCase().includes(q)
+      || (c.empresa || "").toLowerCase().includes(q)
+      || (c.email || "").toLowerCase().includes(q)
+      || (c.codigo_externo || "").toLowerCase().includes(q);
   });
 
   const handleOpenMap = async (lat: number, lng: number) => {
@@ -127,7 +130,7 @@ export default function Clientes() {
       <Card className="p-4 shadow-elevated">
         <div className="mb-4 flex items-center gap-2">
           <Search className="h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar por nome, empresa ou email..." value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-md" />
+          <Input placeholder="Buscar por nome, empresa, código ou email..." value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-md" />
         </div>
 
         {loading ? (
@@ -140,8 +143,11 @@ export default function Clientes() {
               <Card key={c.id} className="p-4 hover:shadow-elevated transition-shadow">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
-                    <div className="font-medium truncate">{c.nome}</div>
-                    {c.empresa && <div className="text-xs text-muted-foreground truncate">{c.empresa}</div>}
+                    <div className="flex items-center gap-2">
+                      {c.codigo_externo && <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground shrink-0">#{c.codigo_externo}</span>}
+                      <div className="font-medium truncate">{c.nome}</div>
+                    </div>
+                    {c.empresa && <div className="text-xs text-muted-foreground truncate mt-0.5">{c.empresa}</div>}
                   </div>
                   <div className="flex gap-0.5 shrink-0">
                     <Button size="sm" variant="ghost" onClick={() => openEdit(c)}><Pencil className="h-4 w-4" /></Button>
@@ -153,15 +159,20 @@ export default function Clientes() {
                   {c.telefone && <div>{c.telefone}</div>}
                   {(c.cidade || c.estado) && <div>{[c.cidade, c.estado].filter(Boolean).join(" / ")}</div>}
                 </div>
-                <div className="mt-3 flex items-center justify-between border-t pt-2 text-xs">
-                  {c.geo_lat && c.geo_lng ? (
-                    <button type="button" onClick={() => handleOpenMap(c.geo_lat!, c.geo_lng!)}
-                      className="inline-flex items-center gap-1 text-primary hover:underline">
-                      <MapPin className="h-3 w-3" /> Ver mapa <ExternalLink className="h-3 w-3" />
-                    </button>
-                  ) : <span className="text-muted-foreground">Sem GPS</span>}
-                  <span className="text-muted-foreground">{fmtDate(c.created_at)}</span>
-                </div>
+                {isAdmin && (
+                  <div className="mt-3 flex items-center justify-between border-t pt-2 text-xs">
+                    {c.geo_lat && c.geo_lng ? (
+                      <button type="button" onClick={() => handleOpenMap(c.geo_lat!, c.geo_lng!)}
+                        className="inline-flex items-center gap-1 text-primary hover:underline">
+                        <MapPin className="h-3 w-3" /> Ver mapa <ExternalLink className="h-3 w-3" />
+                      </button>
+                    ) : <span className="text-muted-foreground">Sem GPS</span>}
+                    <span className="text-muted-foreground">{fmtDate(c.created_at)}</span>
+                  </div>
+                )}
+                {!isAdmin && (
+                  <div className="mt-3 border-t pt-2 text-right text-xs text-muted-foreground">{fmtDate(c.created_at)}</div>
+                )}
               </Card>
             ))}
           </div>
