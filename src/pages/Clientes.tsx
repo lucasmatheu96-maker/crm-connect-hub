@@ -95,7 +95,7 @@ export default function Clientes() {
 
   const remove = async (id: string) => {
     if (!confirm("Excluir este cliente?")) return;
-    const { error } = await supabase.from("clientes").delete().eq("id", id);
+    const { error } = await offlineDelete("clientes", { column: "id", value: id });
     if (error) toast.error(error.message); else { toast.success("Excluído"); load(); }
   };
 
