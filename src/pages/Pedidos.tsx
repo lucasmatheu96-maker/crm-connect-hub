@@ -34,6 +34,8 @@ export default function Pedidos() {
   const isAdmin = role === "admin";
   const [list, setList] = useState<any[]>([]);
   const [clientes, setClientes] = useState<any[]>([]);
+  const [vendedores, setVendedores] = useState<any[]>([]);
+  const [filtroVendedor, setFiltroVendedor] = useState<string>("todos");
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
@@ -44,12 +46,17 @@ export default function Pedidos() {
   useEffect(() => { load(); }, []);
   const load = async () => {
     setLoading(true);
-    const [{ data: peds }, { data: cls }] = await Promise.all([
+    const [{ data: peds }, { data: cls }, { data: profs }] = await Promise.all([
       supabase.from("pedidos").select("*, clientes(nome)").order("created_at", { ascending: false }),
       supabase.from("clientes").select("id, nome, codigo_externo, empresa, cidade, estado").order("nome"),
+      supabase.from("profiles").select("user_id, nome").order("nome"),
     ]);
-    setList(peds || []); setClientes(cls || []); setLoading(false);
+    const profMap = new Map((profs || []).map((p: any) => [p.user_id, p.nome]));
+    const enriched = (peds || []).map((p: any) => ({ ...p, _vendedorNome: profMap.get(p.owner_id) || "—" }));
+    setList(enriched); setClientes(cls || []); setVendedores(profs || []); setLoading(false);
   };
+
+  const listFiltrada = filtroVendedor === "todos" ? list : list.filter((p) => p.owner_id === filtroVendedor);
 
   const openEdit = async (p: any) => {
     if (!isAdmin) return;
