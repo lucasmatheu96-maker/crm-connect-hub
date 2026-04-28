@@ -109,16 +109,30 @@ export default function Pedidos() {
       <PageHeader title="Pedidos" description="Acompanhamento de vendas e entregas" />
 
       <Card className="p-4 shadow-elevated">
+        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="text-sm text-muted-foreground">{listFiltrada.length} pedido(s)</div>
+          <div className="flex items-center gap-2">
+            <Label className="text-xs whitespace-nowrap">Vendedor:</Label>
+            <Select value={filtroVendedor} onValueChange={setFiltroVendedor}>
+              <SelectTrigger className="h-9 w-full sm:w-56"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos</SelectItem>
+                {vendedores.map((v) => <SelectItem key={v.user_id} value={v.user_id}>{v.nome}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
         {loading ? <div className="py-8 text-center text-sm text-muted-foreground">Carregando...</div>
-          : list.length === 0 ? <EmptyState icon={ShoppingCart} title="Nenhum pedido" description="Pedidos são gerados a partir de orçamentos aprovados." />
+          : listFiltrada.length === 0 ? <EmptyState icon={ShoppingCart} title="Nenhum pedido" description="Pedidos são gerados a partir de orçamentos aprovados." />
           : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {list.map((p) => (
+            {listFiltrada.map((p) => (
               <Card key={p.id} className="p-4 hover:shadow-elevated transition-shadow">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <div className="font-mono text-xs text-muted-foreground">#{p.numero}</div>
                     <div className="font-medium truncate">{p.clientes?.nome || "—"}</div>
+                    <div className="text-xs text-muted-foreground truncate">Vend.: {p._vendedorNome}</div>
                   </div>
                   <Badge className={`${statusColor[p.status]} shrink-0`}>{p.status.replace("_"," ")}</Badge>
                 </div>
