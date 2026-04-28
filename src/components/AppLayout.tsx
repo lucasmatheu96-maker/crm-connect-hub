@@ -170,15 +170,23 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
         <main className="flex-1 p-4 md:p-8">{children}</main>
 
         {/* Mobile bottom nav */}
-        <nav className="sticky bottom-0 z-20 flex border-t bg-background md:hidden">
-          {nav.slice(0, 5).map(({ to, label, icon: Icon, end }) => (
+        <nav className="sticky bottom-0 z-20 flex overflow-x-auto border-t bg-background md:hidden">
+          {[
+            ...nav,
+            ...(role === "admin"
+              ? [
+                  { to: "/usuarios", label: "Usuários", icon: ShieldCheck, end: false },
+                  { to: "/configuracoes", label: "Config.", icon: Settings, end: false },
+                ]
+              : []),
+          ].map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to}
               to={to}
               end={end}
               className={({ isActive }) =>
                 cn(
-                  "flex flex-1 flex-col items-center gap-1 py-2 text-[10px]",
+                  "flex min-w-[64px] flex-1 flex-col items-center gap-1 py-2 text-[10px]",
                   isActive ? "text-primary" : "text-muted-foreground",
                 )
               }
