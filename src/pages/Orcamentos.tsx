@@ -36,6 +36,8 @@ export default function Orcamentos() {
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [clientes, setClientes] = useState<any[]>([]);
+  const [vendedores, setVendedores] = useState<any[]>([]);
+  const [filtroVendedor, setFiltroVendedor] = useState<string>("todos");
   const [editing, setEditing] = useState<any>(null);
   const [form, setForm] = useState<any>({ status: "rascunho", desconto: 0 });
   const [itens, setItens] = useState<Item[]>([]);
@@ -45,15 +47,19 @@ export default function Orcamentos() {
 
   const load = async () => {
     setLoading(true);
-    const [{ data: orcs }, { data: cls }, { data: peds }] = await Promise.all([
+    const [{ data: orcs }, { data: cls }, { data: peds }, { data: profs }] = await Promise.all([
       supabase.from("orcamentos").select("*, clientes(nome)").order("created_at", { ascending: false }),
       supabase.from("clientes").select("id, nome, codigo_externo, empresa, endereco, cidade, estado, cep").order("nome"),
       supabase.from("pedidos").select("orcamento_id").not("orcamento_id", "is", null),
+      supabase.from("profiles").select("user_id, nome").order("nome"),
     ]);
     const pedidoOrcIds = new Set((peds || []).map((p: any) => p.orcamento_id));
-    const enriched = (orcs || []).map((o: any) => ({ ...o, _temPedido: pedidoOrcIds.has(o.id) }));
-    setList(enriched); setClientes(cls || []); setLoading(false);
+    const profMap = new Map((profs || []).map((p: any) => [p.user_id, p.nome]));
+    const enriched = (orcs || []).map((o: any) => ({ ...o, _temPedido: pedidoOrcIds.has(o.id), _vendedorNome: profMap.get(o.owner_id) || "—" }));
+    setList(enriched); setClientes(cls || []); setVendedores(profs || []); setLoading(false);
   };
+
+  const listFiltrada = filtroVendedor === "todos" ? list : list.filter((o) => o.owner_id === filtroVendedor);
 
   const getClienteFallbackAddress = (clienteId?: string | null) => {
     const cliente = clientes.find((item) => item.id === clienteId);
