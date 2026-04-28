@@ -183,6 +183,7 @@ export default function Clientes() {
         <DialogContent className="max-w-2xl">
           <DialogHeader><DialogTitle>{editing ? "Editar cliente" : "Novo cliente"}</DialogTitle></DialogHeader>
           <form onSubmit={save} className="grid gap-4 sm:grid-cols-2">
+            <Field label="Código" value={form.codigo_externo} onChange={(v) => setForm({ ...form, codigo_externo: v })} />
             <Field label="Nome *" value={form.nome} onChange={(v) => setForm({ ...form, nome: v })} />
             <Field label="Empresa" value={form.empresa} onChange={(v) => setForm({ ...form, empresa: v })} />
             <Field label="CPF / CNPJ" value={form.cpf_cnpj} onChange={(v) => setForm({ ...form, cpf_cnpj: v })} />
@@ -196,7 +197,7 @@ export default function Clientes() {
               <Label>Observações</Label>
               <Textarea value={form.observacoes || ""} onChange={(e) => setForm({ ...form, observacoes: e.target.value })} maxLength={2000} rows={3} />
             </div>
-            {!editing && (
+            {!editing && isAdmin && (
               <div className="sm:col-span-2 flex items-start gap-2 rounded-lg bg-accent-soft p-3 text-xs text-accent">
                 <MapPin className="h-4 w-4 shrink-0 mt-0.5" />
                 <span>Ao salvar, capturaremos sua localização via GPS. Se o GPS for negado (ex: desktop), usaremos o endereço informado acima para localizar no mapa.</span>
