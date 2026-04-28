@@ -123,6 +123,7 @@ export type Database = {
         Row: {
           cep: string | null
           cidade: string | null
+          codigo_externo: string | null
           cpf_cnpj: string | null
           created_at: string
           email: string | null
@@ -134,15 +135,21 @@ export type Database = {
           geo_lng: number | null
           id: string
           nome: string
+          nome_fantasia: string | null
           observacoes: string | null
           owner_id: string
+          razao_social: string | null
           source: string
+          status_financeiro: string | null
           telefone: string | null
+          uf: string | null
           updated_at: string
+          vendedor_responsavel: string | null
         }
         Insert: {
           cep?: string | null
           cidade?: string | null
+          codigo_externo?: string | null
           cpf_cnpj?: string | null
           created_at?: string
           email?: string | null
@@ -154,15 +161,21 @@ export type Database = {
           geo_lng?: number | null
           id?: string
           nome: string
+          nome_fantasia?: string | null
           observacoes?: string | null
           owner_id: string
+          razao_social?: string | null
           source?: string
+          status_financeiro?: string | null
           telefone?: string | null
+          uf?: string | null
           updated_at?: string
+          vendedor_responsavel?: string | null
         }
         Update: {
           cep?: string | null
           cidade?: string | null
+          codigo_externo?: string | null
           cpf_cnpj?: string | null
           created_at?: string
           email?: string | null
@@ -174,11 +187,16 @@ export type Database = {
           geo_lng?: number | null
           id?: string
           nome?: string
+          nome_fantasia?: string | null
           observacoes?: string | null
           owner_id?: string
+          razao_social?: string | null
           source?: string
+          status_financeiro?: string | null
           telefone?: string | null
+          uf?: string | null
           updated_at?: string
+          vendedor_responsavel?: string | null
         }
         Relationships: []
       }
@@ -295,51 +313,78 @@ export type Database = {
       orcamentos: {
         Row: {
           cliente_id: string
+          codigo_externo: string | null
           created_at: string
+          data_documento: string | null
+          data_situacao: string | null
           desconto: number
+          empresa_cadastro: string | null
+          finalidade: string | null
           geo_endereco: string | null
           geo_lat: number | null
           geo_lng: number | null
           id: string
+          nfe_seq: string | null
           numero: number
           observacoes: string | null
           owner_id: string
+          prioridade: string | null
+          responsavel_documento: string | null
           source: string
           status: Database["public"]["Enums"]["orcamento_status"]
+          status_externo: string | null
           total: number
           updated_at: string
           validade: string | null
         }
         Insert: {
           cliente_id: string
+          codigo_externo?: string | null
           created_at?: string
+          data_documento?: string | null
+          data_situacao?: string | null
           desconto?: number
+          empresa_cadastro?: string | null
+          finalidade?: string | null
           geo_endereco?: string | null
           geo_lat?: number | null
           geo_lng?: number | null
           id?: string
+          nfe_seq?: string | null
           numero?: number
           observacoes?: string | null
           owner_id: string
+          prioridade?: string | null
+          responsavel_documento?: string | null
           source?: string
           status?: Database["public"]["Enums"]["orcamento_status"]
+          status_externo?: string | null
           total?: number
           updated_at?: string
           validade?: string | null
         }
         Update: {
           cliente_id?: string
+          codigo_externo?: string | null
           created_at?: string
+          data_documento?: string | null
+          data_situacao?: string | null
           desconto?: number
+          empresa_cadastro?: string | null
+          finalidade?: string | null
           geo_endereco?: string | null
           geo_lat?: number | null
           geo_lng?: number | null
           id?: string
+          nfe_seq?: string | null
           numero?: number
           observacoes?: string | null
           owner_id?: string
+          prioridade?: string | null
+          responsavel_documento?: string | null
           source?: string
           status?: Database["public"]["Enums"]["orcamento_status"]
+          status_externo?: string | null
           total?: number
           updated_at?: string
           validade?: string | null
@@ -405,52 +450,79 @@ export type Database = {
       pedidos: {
         Row: {
           cliente_id: string
+          codigo_externo: string | null
           created_at: string
+          data_documento: string | null
+          data_situacao: string | null
           desconto: number
+          empresa_cadastro: string | null
+          finalidade: string | null
           geo_endereco: string | null
           geo_lat: number | null
           geo_lng: number | null
           id: string
+          nfe_seq: string | null
           numero: number
           observacoes: string | null
           orcamento_id: string | null
           owner_id: string
+          prioridade: string | null
+          responsavel_documento: string | null
           source: string
           status: Database["public"]["Enums"]["pedido_status"]
+          status_externo: string | null
           total: number
           updated_at: string
         }
         Insert: {
           cliente_id: string
+          codigo_externo?: string | null
           created_at?: string
+          data_documento?: string | null
+          data_situacao?: string | null
           desconto?: number
+          empresa_cadastro?: string | null
+          finalidade?: string | null
           geo_endereco?: string | null
           geo_lat?: number | null
           geo_lng?: number | null
           id?: string
+          nfe_seq?: string | null
           numero?: number
           observacoes?: string | null
           orcamento_id?: string | null
           owner_id: string
+          prioridade?: string | null
+          responsavel_documento?: string | null
           source?: string
           status?: Database["public"]["Enums"]["pedido_status"]
+          status_externo?: string | null
           total?: number
           updated_at?: string
         }
         Update: {
           cliente_id?: string
+          codigo_externo?: string | null
           created_at?: string
+          data_documento?: string | null
+          data_situacao?: string | null
           desconto?: number
+          empresa_cadastro?: string | null
+          finalidade?: string | null
           geo_endereco?: string | null
           geo_lat?: number | null
           geo_lng?: number | null
           id?: string
+          nfe_seq?: string | null
           numero?: number
           observacoes?: string | null
           orcamento_id?: string | null
           owner_id?: string
+          prioridade?: string | null
+          responsavel_documento?: string | null
           source?: string
           status?: Database["public"]["Enums"]["pedido_status"]
+          status_externo?: string | null
           total?: number
           updated_at?: string
         }
@@ -475,43 +547,55 @@ export type Database = {
         Row: {
           ativo: boolean
           categoria: string | null
+          codigo_externo: string | null
           created_at: string
           descricao: string | null
+          disponivel: number | null
           estoque: number
           id: string
           nome: string
           owner_id: string
           preco: number
+          preco_sugerido: number | null
           sku: string | null
           source: string
+          unidade: string | null
           updated_at: string
         }
         Insert: {
           ativo?: boolean
           categoria?: string | null
+          codigo_externo?: string | null
           created_at?: string
           descricao?: string | null
+          disponivel?: number | null
           estoque?: number
           id?: string
           nome: string
           owner_id: string
           preco?: number
+          preco_sugerido?: number | null
           sku?: string | null
           source?: string
+          unidade?: string | null
           updated_at?: string
         }
         Update: {
           ativo?: boolean
           categoria?: string | null
+          codigo_externo?: string | null
           created_at?: string
           descricao?: string | null
+          disponivel?: number | null
           estoque?: number
           id?: string
           nome?: string
           owner_id?: string
           preco?: number
+          preco_sugerido?: number | null
           sku?: string | null
           source?: string
+          unidade?: string | null
           updated_at?: string
         }
         Relationships: []
