@@ -18,7 +18,7 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.ico", "robots.txt", "icon-512.png"],
+      includeAssets: ["favicon.ico", "robots.txt", "icon-192.png", "icon-512.png", "apple-touch-icon.png"],
       manifest: {
         name: "MedControl CRM",
         short_name: "MedControl",
@@ -30,9 +30,13 @@ export default defineConfig(({ mode }) => ({
         start_url: "/",
         scope: "/",
         lang: "pt-BR",
+        categories: ["business", "productivity"],
         icons: [
+          { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
           { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+          { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "maskable" },
           { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+          { src: "/apple-touch-icon.png", sizes: "180x180", type: "image/png", purpose: "any" },
         ],
       },
       workbox: {
