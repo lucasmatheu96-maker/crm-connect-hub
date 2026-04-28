@@ -32,6 +32,7 @@ const App = () => (
       <Sonner position="top-right" />
       <BrowserRouter>
         <AuthProvider>
+          <InstallPrompt />
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/install" element={<Install />} />
