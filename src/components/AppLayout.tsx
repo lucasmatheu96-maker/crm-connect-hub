@@ -38,7 +38,7 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
     <div className="flex min-h-screen bg-subtle-gradient">
       <OnboardingPermissions />
       {/* Sidebar */}
-      <aside className="hidden w-64 flex-col bg-sidebar text-sidebar-foreground md:flex">
+      <aside className="sticky top-0 hidden h-screen w-64 flex-col self-start bg-sidebar text-sidebar-foreground md:flex">
         <div className="flex items-center gap-3 px-5 py-5 border-b border-sidebar-border">
           <div className="rounded-lg bg-white p-1.5">
             <Logo size="sm" />
