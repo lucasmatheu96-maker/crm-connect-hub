@@ -16,6 +16,7 @@ import { Plus, ShoppingCart, Pencil, Trash2, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { fmtMoney, fmtDate } from "@/lib/format";
 import { ItensEditor, Item } from "@/components/ItensEditor";
+import { offlineInsert, offlineUpdate, offlineDelete } from "@/lib/offlineWrite";
 
 const STATUSES = ["novo","confirmado","em_separacao","faturado","enviado","entregue","cancelado"] as const;
 const statusColor: Record<string, string> = {
