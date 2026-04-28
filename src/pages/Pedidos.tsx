@@ -9,14 +9,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, ShoppingCart, Pencil, Trash2, MapPin } from "lucide-react";
+import { ShoppingCart, Pencil, Trash2, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { fmtMoney, fmtDate } from "@/lib/format";
 import { ItensEditor, Item } from "@/components/ItensEditor";
-import { offlineInsert, offlineUpdate, offlineDelete } from "@/lib/offlineWrite";
+import { offlineUpdate, offlineDelete } from "@/lib/offlineWrite";
 
 const STATUSES = ["novo","confirmado","em_separacao","faturado","enviado","entregue","cancelado"] as const;
 const statusColor: Record<string, string> = {
@@ -30,7 +29,8 @@ const statusColor: Record<string, string> = {
 };
 
 export default function Pedidos() {
-  const { user } = useAuth();
+  const { role } = useAuth();
+  const isAdmin = role === "admin";
   const [list, setList] = useState<any[]>([]);
   const [clientes, setClientes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,8 +50,8 @@ export default function Pedidos() {
     setList(peds || []); setClientes(cls || []); setLoading(false);
   };
 
-  const openNew = () => { setEditing(null); setForm({ status: "novo", desconto: 0 }); setItens([]); setOpen(true); };
   const openEdit = async (p: any) => {
+    if (!isAdmin) return;
     setEditing(p); setForm(p);
     const { data } = await supabase.from("pedido_itens").select("*").eq("pedido_id", p.id);
     setItens((data || []).map((i: any) => ({ produto_id: i.produto_id, descricao: i.descricao, quantidade: Number(i.quantidade), preco_unitario: Number(i.preco_unitario) })));
@@ -60,6 +60,7 @@ export default function Pedidos() {
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isAdmin || !editing) return;
     if (!form.cliente_id) { toast.error("Selecione um cliente"); return; }
     if (itens.length === 0) { toast.error("Adicione ao menos um item"); return; }
     setBusy(true);
@@ -68,38 +69,28 @@ export default function Pedidos() {
     const payload: any = {
       cliente_id: form.cliente_id, status: form.status,
       desconto: Number(form.desconto || 0), total,
-      observacoes: form.observacoes || null, owner_id: user!.id,
+      observacoes: form.observacoes || null,
     };
-    let pedidoId = editing?.id;
-    if (editing) {
-      const { error } = await offlineUpdate("pedidos", payload, { column: "id", value: editing.id });
-      if (error) { toast.error(error.message); setBusy(false); return; }
-      if (navigator.onLine) {
-        await supabase.from("pedido_itens").delete().eq("pedido_id", editing.id);
-      } else {
-        await offlineDelete("pedido_itens", { column: "pedido_id", value: editing.id });
-      }
+    const { error } = await offlineUpdate("pedidos", payload, { column: "id", value: editing.id });
+    if (error) { toast.error(error.message); setBusy(false); return; }
+    if (navigator.onLine) {
+      await supabase.from("pedido_itens").delete().eq("pedido_id", editing.id);
     } else {
-      if (navigator.onLine) toast.info("Capturando localização...");
-      const geo = await captureLocation();
-      pedidoId = (typeof crypto !== "undefined" && (crypto as any).randomUUID)
-        ? (crypto as any).randomUUID()
-        : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-      const { error } = await offlineInsert("pedidos", { id: pedidoId, ...payload, ...geo });
-      if (error) { toast.error(error.message); setBusy(false); return; }
+      await offlineDelete("pedido_itens", { column: "pedido_id", value: editing.id });
     }
     for (const i of itens) {
-      await offlineInsert("pedido_itens", {
-        pedido_id: pedidoId, produto_id: i.produto_id || null,
+      await supabase.from("pedido_itens").insert({
+        pedido_id: editing.id, produto_id: i.produto_id || null,
         descricao: i.descricao || "Item", quantidade: i.quantidade,
         preco_unitario: i.preco_unitario, subtotal: i.quantidade * i.preco_unitario,
       });
     }
     setBusy(false); setOpen(false); load();
-    toast.success(editing ? "Pedido atualizado" : "Pedido criado");
+    toast.success("Pedido atualizado");
   };
 
   const remove = async (id: string) => {
+    if (!isAdmin) { toast.error("Apenas administradores podem excluir"); return; }
     if (!confirm("Excluir pedido?")) return;
     const { error } = await offlineDelete("pedidos", { column: "id", value: id });
     if (error) toast.error(error.message); else { toast.success("Excluído"); load(); }
@@ -107,51 +98,51 @@ export default function Pedidos() {
 
   return (
     <div>
-      <PageHeader title="Pedidos" description="Acompanhamento de vendas e entregas" actions={<Button variant="brand" onClick={openNew}><Plus className="h-4 w-4" /> Novo pedido</Button>} />
+      <PageHeader title="Pedidos" description="Acompanhamento de vendas e entregas" />
 
       <Card className="p-4 shadow-elevated">
         {loading ? <div className="py-8 text-center text-sm text-muted-foreground">Carregando...</div>
-          : list.length === 0 ? <EmptyState icon={ShoppingCart} title="Nenhum pedido" description="Crie pedidos diretamente ou converta a partir de orçamentos." action={<Button variant="brand" onClick={openNew}><Plus className="h-4 w-4" /> Novo pedido</Button>} />
+          : list.length === 0 ? <EmptyState icon={ShoppingCart} title="Nenhum pedido" description="Pedidos são gerados a partir de orçamentos aprovados." />
           : (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>#</TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
-                  <TableHead>Loc.</TableHead>
-                  <TableHead>Criado</TableHead>
-                  <TableHead className="w-24"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {list.map((p) => (
-                  <TableRow key={p.id}>
-                    <TableCell className="font-mono text-xs">#{p.numero}</TableCell>
-                    <TableCell className="font-medium">{p.clientes?.nome}</TableCell>
-                    <TableCell><Badge className={statusColor[p.status]}>{p.status.replace("_", " ")}</Badge></TableCell>
-                    <TableCell className="text-right font-semibold">{fmtMoney(p.total)}</TableCell>
-                    <TableCell>{p.geo_lat ? <a href={`https://www.google.com/maps?q=${p.geo_lat},${p.geo_lng}`} target="_blank" rel="noreferrer"><MapPin className="h-4 w-4 text-primary" /></a> : <span className="text-xs text-muted-foreground">—</span>}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{fmtDate(p.created_at)}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        <Button size="icon" variant="ghost" onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /></Button>
-                        <Button size="icon" variant="ghost" onClick={() => remove(p.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {list.map((p) => (
+              <Card key={p.id} className="p-4 hover:shadow-elevated transition-shadow">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="font-mono text-xs text-muted-foreground">#{p.numero}</div>
+                    <div className="font-medium truncate">{p.clientes?.nome || "—"}</div>
+                  </div>
+                  <Badge className={`${statusColor[p.status]} shrink-0`}>{p.status.replace("_"," ")}</Badge>
+                </div>
+                <div className="mt-3 flex items-end justify-between gap-2">
+                  <div>
+                    <div className="text-[10px] uppercase text-muted-foreground tracking-wide">Total</div>
+                    <div className="text-lg font-semibold">{fmtMoney(p.total)}</div>
+                  </div>
+                  <div className="text-right text-xs text-muted-foreground">
+                    {fmtDate(p.created_at)}
+                    {p.geo_lat && (
+                      <a href={`https://www.google.com/maps?q=${p.geo_lat},${p.geo_lng}`} target="_blank" rel="noreferrer" className="ml-2 inline-flex">
+                        <MapPin className="h-3 w-3 text-primary" />
+                      </a>
+                    )}
+                  </div>
+                </div>
+                {isAdmin && (
+                  <div className="mt-3 flex justify-end gap-1 border-t pt-2">
+                    <Button size="sm" variant="ghost" onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /></Button>
+                    <Button size="sm" variant="ghost" onClick={() => remove(p.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                  </div>
+                )}
+              </Card>
+            ))}
           </div>
         )}
       </Card>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>{editing ? `Pedido #${editing.numero}` : "Novo pedido"}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{editing ? `Pedido #${editing.numero}` : "Pedido"}</DialogTitle></DialogHeader>
           <form onSubmit={save} className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="space-y-2 sm:col-span-2">
@@ -172,8 +163,6 @@ export default function Pedidos() {
             </div>
 
             <ItensEditor itens={itens} onChange={setItens} />
-
-            {!editing && <div className="flex items-start gap-2 rounded-lg bg-accent-soft p-3 text-xs text-accent"><MapPin className="h-4 w-4 shrink-0 mt-0.5" /><span>Localização atual será capturada ao salvar.</span></div>}
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
