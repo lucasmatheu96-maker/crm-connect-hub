@@ -42,6 +42,43 @@ export default defineConfig(({ mode }) => ({
       workbox: {
         navigateFallbackDenylist: [/^\/~oauth/, /^\/auth/],
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        navigateFallback: "/index.html",
+        cleanupOutdatedCaches: true,
+        runtimeCaching: [
+          {
+            // Cache GETs da API Supabase (REST) para uso offline
+            urlPattern: ({ url, request }) =>
+              url.hostname.endsWith(".supabase.co") &&
+              url.pathname.startsWith("/rest/") &&
+              request.method === "GET",
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "supabase-rest-cache",
+              networkTimeoutSeconds: 6,
+              expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 7 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            // Tiles e imagens externas (mapas/avatars)
+            urlPattern: ({ request }) => request.destination === "image",
+            handler: "StaleWhileRevalidate",
+            options: {
+              cacheName: "images-cache",
+              expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 30 },
+            },
+          },
+          {
+            // Google Fonts
+            urlPattern: /^https:\/\/fonts\.(gstatic|googleapis)\.com\/.*/i,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "google-fonts",
+              expiration: { maxEntries: 30, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+        ],
       },
       devOptions: {
         enabled: false,
