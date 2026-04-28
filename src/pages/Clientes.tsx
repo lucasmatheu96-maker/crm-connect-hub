@@ -74,15 +74,22 @@ export default function Clientes() {
       if (error) { toast.error(error.message); setBusy(false); return; }
       toast.success("Cliente atualizado");
     } else {
-      toast.info("Capturando localização...");
+      // Captura localização em paralelo, mas NÃO bloqueia o cadastro se falhar
       const fallback = [form.endereco, form.cidade, form.estado, form.cep, "Brasil"]
         .filter(Boolean).join(", ");
-      const geo = await captureLocation(fallback);
+      let geo = { geo_lat: null, geo_lng: null, geo_endereco: null } as Awaited<ReturnType<typeof captureLocation>>;
+      try {
+        geo = await Promise.race([
+          captureLocation(fallback),
+          new Promise<typeof geo>((resolve) => setTimeout(() => resolve(geo), 12000)),
+        ]);
+      } catch {
+        // ignora — segue sem geo
+      }
       const { error } = await supabase.from("clientes").insert({ ...payload, ...geo });
       if (error) { toast.error(error.message); setBusy(false); return; }
-      if (geo.geo_lat && geo.geo_endereco) toast.success("Cliente cadastrado com localização (GPS ou endereço)");
-      else if (geo.geo_lat) toast.success("Cliente cadastrado com coordenadas");
-      else toast.warning("Cliente cadastrado, mas sem localização (GPS negado e endereço não localizado)");
+      if (geo.geo_lat) toast.success("Cliente cadastrado com sucesso ✓ Localização capturada.");
+      else toast.success("Cliente cadastrado com sucesso ✓");
     }
     setBusy(false); setOpen(false); load();
   };

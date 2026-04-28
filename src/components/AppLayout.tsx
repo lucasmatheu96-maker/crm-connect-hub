@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { OnboardingPermissions } from "@/components/OnboardingPermissions";
 
 const nav = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
@@ -35,6 +36,7 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
 
   return (
     <div className="flex min-h-screen bg-subtle-gradient">
+      <OnboardingPermissions />
       {/* Sidebar */}
       <aside className="hidden w-64 flex-col bg-sidebar text-sidebar-foreground md:flex">
         <div className="flex items-center gap-3 px-5 py-5 border-b border-sidebar-border">
