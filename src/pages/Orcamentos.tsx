@@ -45,11 +45,14 @@ export default function Orcamentos() {
 
   const load = async () => {
     setLoading(true);
-    const [{ data: orcs }, { data: cls }] = await Promise.all([
+    const [{ data: orcs }, { data: cls }, { data: peds }] = await Promise.all([
       supabase.from("orcamentos").select("*, clientes(nome)").order("created_at", { ascending: false }),
       supabase.from("clientes").select("id, nome, codigo_externo, empresa, endereco, cidade, estado, cep").order("nome"),
+      supabase.from("pedidos").select("orcamento_id").not("orcamento_id", "is", null),
     ]);
-    setList(orcs || []); setClientes(cls || []); setLoading(false);
+    const pedidoOrcIds = new Set((peds || []).map((p: any) => p.orcamento_id));
+    const enriched = (orcs || []).map((o: any) => ({ ...o, _temPedido: pedidoOrcIds.has(o.id) }));
+    setList(enriched); setClientes(cls || []); setLoading(false);
   };
 
   const getClienteFallbackAddress = (clienteId?: string | null) => {
@@ -131,6 +134,13 @@ export default function Orcamentos() {
   };
 
   const converterEmPedido = async (o: any) => {
+    // Verificação dupla anti-duplicidade: checa no banco no momento do clique
+    const { data: existente } = await supabase.from("pedidos").select("id, numero").eq("orcamento_id", o.id).maybeSingle();
+    if (existente) {
+      toast.error(`Este orçamento já foi convertido no pedido #${existente.numero}`);
+      load();
+      return;
+    }
     if (!confirm(`Converter orçamento #${o.numero} em pedido?`)) return;
     const { data: itensData } = await supabase.from("orcamento_itens").select("*").eq("orcamento_id", o.id);
     const geo = await captureLocation(getClienteFallbackAddress(o.cliente_id));
@@ -194,7 +204,11 @@ export default function Orcamentos() {
                     ) : <span className="text-xs text-muted-foreground">Sem GPS</span>
                   ) : <span />}
                   <div className="flex gap-0.5">
-                    <Button size="sm" variant="ghost" title="Converter em pedido" onClick={() => converterEmPedido(o)}><ArrowRight className="h-4 w-4 text-success" /></Button>
+                    {o._temPedido ? (
+                      <Badge variant="secondary" className="text-[10px]" title="Pedido já gerado para este orçamento">Pedido gerado</Badge>
+                    ) : (
+                      <Button size="sm" variant="ghost" title="Converter em pedido" onClick={() => converterEmPedido(o)}><ArrowRight className="h-4 w-4 text-success" /></Button>
+                    )}
                     <Button size="sm" variant="ghost" onClick={() => openEdit(o)}><Pencil className="h-4 w-4" /></Button>
                     <Button size="sm" variant="ghost" onClick={() => remove(o.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                   </div>
