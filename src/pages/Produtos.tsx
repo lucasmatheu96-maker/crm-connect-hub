@@ -10,7 +10,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Plus, Package, Search, Pencil, Trash2 } from "lucide-react";
@@ -29,7 +28,8 @@ const schema = z.object({
 });
 
 export default function Produtos() {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
+  const isAdmin = role === "admin";
   const [list, setList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
@@ -45,11 +45,11 @@ export default function Produtos() {
     setList(data || []); setLoading(false);
   };
 
-  const openNew = () => { setEditing(null); setForm({ ativo: true, preco: 0, estoque: 0 }); setOpen(true); };
   const openEdit = (p: any) => { setEditing(p); setForm(p); setOpen(true); };
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isAdmin) { toast.error("Apenas administradores podem editar produtos"); return; }
     const parsed = schema.safeParse(form);
     if (!parsed.success) { toast.error(parsed.error.errors[0].message); return; }
     setBusy(true);
@@ -60,10 +60,11 @@ export default function Produtos() {
       : await offlineInsert("produtos", payload);
     setBusy(false);
     if (error) toast.error(error.message);
-    else { toast.success(editing ? "Atualizado" : "Cadastrado"); setOpen(false); load(); }
+    else { toast.success("Atualizado"); setOpen(false); load(); }
   };
 
   const remove = async (id: string) => {
+    if (!isAdmin) { toast.error("Apenas administradores podem excluir"); return; }
     if (!confirm("Excluir produto?")) return;
     const { error } = await offlineDelete("produtos", { column: "id", value: id });
     if (error) toast.error(error.message); else { toast.success("Excluído"); load(); }
@@ -73,7 +74,7 @@ export default function Produtos() {
 
   return (
     <div>
-      <PageHeader title="Produtos" description="Catálogo e estoque" actions={<Button variant="brand" onClick={openNew}><Plus className="h-4 w-4" /> Novo produto</Button>} />
+      <PageHeader title="Produtos" description="Catálogo e estoque" />
 
       <Card className="p-4 shadow-elevated">
         <div className="mb-4 flex items-center gap-2">
@@ -84,46 +85,46 @@ export default function Produtos() {
         {loading ? (
           <div className="py-8 text-center text-sm text-muted-foreground">Carregando...</div>
         ) : filtered.length === 0 ? (
-          <EmptyState icon={Package} title="Sem produtos" description="Cadastre produtos para usar em orçamentos e pedidos." action={<Button variant="brand" onClick={openNew}><Plus className="h-4 w-4" /> Novo produto</Button>} />
+          <EmptyState icon={Package} title="Sem produtos" description="A importação de planilha cadastra os produtos automaticamente." />
         ) : (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>SKU</TableHead>
-                  <TableHead>Categoria</TableHead>
-                  <TableHead className="text-right">Preço sugerido</TableHead>
-                  <TableHead className="text-right">Estoque</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="w-24"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((p) => (
-                  <TableRow key={p.id}>
-                    <TableCell className="font-medium">{p.nome}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{p.sku || "—"}</TableCell>
-                    <TableCell className="text-xs">{p.categoria || "—"}</TableCell>
-                    <TableCell className="text-right font-semibold">{fmtMoney(p.preco)}</TableCell>
-                    <TableCell className="text-right">{p.estoque}</TableCell>
-                    <TableCell>{p.ativo ? <Badge className="bg-success text-success-foreground hover:bg-success">Ativo</Badge> : <Badge variant="secondary">Inativo</Badge>}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        <Button size="icon" variant="ghost" onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /></Button>
-                        <Button size="icon" variant="ghost" onClick={() => remove(p.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {filtered.map((p) => (
+              <Card key={p.id} className="p-4 hover:shadow-elevated transition-shadow">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium truncate">{p.nome}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">
+                      {p.sku || "—"}{p.categoria ? ` · ${p.categoria}` : ""}
+                    </div>
+                  </div>
+                  {p.ativo
+                    ? <Badge className="bg-success text-success-foreground hover:bg-success shrink-0">Ativo</Badge>
+                    : <Badge variant="secondary" className="shrink-0">Inativo</Badge>}
+                </div>
+                <div className="mt-3 flex items-end justify-between gap-2">
+                  <div>
+                    <div className="text-[10px] uppercase text-muted-foreground tracking-wide">Preço sugerido</div>
+                    <div className="text-lg font-semibold">{fmtMoney(p.preco)}</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-[10px] uppercase text-muted-foreground tracking-wide">Estoque</div>
+                    <div className="text-lg font-semibold">{p.estoque}</div>
+                  </div>
+                </div>
+                {isAdmin && (
+                  <div className="mt-3 flex justify-end gap-1 border-t pt-2">
+                    <Button size="sm" variant="ghost" onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /></Button>
+                    <Button size="sm" variant="ghost" onClick={() => remove(p.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                  </div>
+                )}
+              </Card>
+            ))}
           </div>
         )}
       </Card>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-xl">
+        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{editing ? "Editar produto" : "Novo produto"}</DialogTitle></DialogHeader>
           <form onSubmit={save} className="grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2 space-y-2"><Label>Nome *</Label><Input value={form.nome || ""} onChange={(e) => setForm({ ...form, nome: e.target.value })} required /></div>
