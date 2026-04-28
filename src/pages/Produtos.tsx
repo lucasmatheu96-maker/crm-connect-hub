@@ -93,7 +93,7 @@ export default function Produtos() {
                   <TableHead>Nome</TableHead>
                   <TableHead>SKU</TableHead>
                   <TableHead>Categoria</TableHead>
-                  <TableHead className="text-right">Preço</TableHead>
+                  <TableHead className="text-right">Preço sugerido</TableHead>
                   <TableHead className="text-right">Estoque</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="w-24"></TableHead>
