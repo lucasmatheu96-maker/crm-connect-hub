@@ -18,7 +18,8 @@ export async function offlineInsert(table: OutboxTable, payload: any): Promise<W
     toast.info("Sem internet — salvo localmente. Sincronizaremos quando voltar.");
     return { data: { ...payload, id: `pending-${Date.now()}` }, error: null, pending: true };
   }
-  const { data, error } = await supabase.from(table).insert(payload).select().maybeSingle();
+  const q: any = supabase.from(table as any);
+  const { data, error } = await q.insert(payload).select().maybeSingle();
   return { data, error, pending: false };
 }
 
@@ -28,7 +29,8 @@ export async function offlineUpdate(table: OutboxTable, payload: any, match: { c
     toast.info("Sem internet — alteração salva localmente.");
     return { data: payload, error: null, pending: true };
   }
-  const { data, error } = await supabase.from(table).update(payload).eq(match.column, match.value).select().maybeSingle();
+  const q: any = supabase.from(table as any);
+  const { data, error } = await q.update(payload).eq(match.column, match.value).select().maybeSingle();
   return { data, error, pending: false };
 }
 
@@ -38,6 +40,7 @@ export async function offlineDelete(table: OutboxTable, match: { column: string;
     toast.info("Sem internet — exclusão registrada localmente.");
     return { data: null, error: null, pending: true };
   }
-  const { error } = await supabase.from(table).delete().eq(match.column, match.value);
+  const q: any = supabase.from(table as any);
+  const { error } = await q.delete().eq(match.column, match.value);
   return { data: null, error, pending: false };
 }
