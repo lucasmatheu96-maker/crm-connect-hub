@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Sheet, RefreshCw, ExternalLink } from "lucide-react";
+import { ImportadorPlanilhas } from "@/components/ImportadorPlanilhas";
 
 export default function Configuracoes() {
   const [sheetId, setSheetId] = useState("");
