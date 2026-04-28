@@ -162,41 +162,41 @@ export default function Orcamentos() {
         {loading ? <div className="py-8 text-center text-sm text-muted-foreground">Carregando...</div>
           : list.length === 0 ? <EmptyState icon={FileText} title="Nenhum orçamento" description="Crie propostas comerciais com itens e valores." action={<Button variant="brand" onClick={openNew}><Plus className="h-4 w-4" /> Novo orçamento</Button>} />
           : (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>#</TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Validade</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
-                  <TableHead>Loc.</TableHead>
-                  <TableHead>Criado</TableHead>
-                  <TableHead className="w-32"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {list.map((o) => (
-                  <TableRow key={o.id}>
-                    <TableCell className="font-mono text-xs">#{o.numero}</TableCell>
-                    <TableCell className="font-medium">{o.clientes?.nome}</TableCell>
-                    <TableCell><Badge className={statusColor[o.status]}>{o.status}</Badge></TableCell>
-                    <TableCell className="text-xs">{fmtDate(o.validade)}</TableCell>
-                    <TableCell className="text-right font-semibold">{fmtMoney(o.total)}</TableCell>
-                    <TableCell>{o.geo_lat && o.geo_lng ? <button type="button" onClick={() => handleOpenMap(o.geo_lat, o.geo_lng)}><MapPin className="h-4 w-4 text-primary" /></button> : <span className="text-xs text-muted-foreground">—</span>}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{fmtDate(o.created_at)}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        <Button size="icon" variant="ghost" title="Converter em pedido" onClick={() => converterEmPedido(o)}><ArrowRight className="h-4 w-4 text-success" /></Button>
-                        <Button size="icon" variant="ghost" onClick={() => openEdit(o)}><Pencil className="h-4 w-4" /></Button>
-                        <Button size="icon" variant="ghost" onClick={() => remove(o.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {list.map((o) => (
+              <Card key={o.id} className="p-4 hover:shadow-elevated transition-shadow">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="font-mono text-xs text-muted-foreground">#{o.numero}</div>
+                    <div className="font-medium truncate">{o.clientes?.nome || "—"}</div>
+                  </div>
+                  <Badge className={`${statusColor[o.status]} shrink-0`}>{o.status}</Badge>
+                </div>
+                <div className="mt-3 flex items-end justify-between gap-2">
+                  <div>
+                    <div className="text-[10px] uppercase text-muted-foreground tracking-wide">Total</div>
+                    <div className="text-lg font-semibold">{fmtMoney(o.total)}</div>
+                  </div>
+                  <div className="text-right text-xs text-muted-foreground">
+                    {o.validade && <div>Val.: {fmtDate(o.validade)}</div>}
+                    <div>{fmtDate(o.created_at)}</div>
+                  </div>
+                </div>
+                <div className="mt-3 flex items-center justify-between border-t pt-2">
+                  {o.geo_lat && o.geo_lng ? (
+                    <button type="button" onClick={() => handleOpenMap(o.geo_lat, o.geo_lng)}
+                      className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+                      <MapPin className="h-3 w-3" /> Mapa
+                    </button>
+                  ) : <span className="text-xs text-muted-foreground">Sem GPS</span>}
+                  <div className="flex gap-0.5">
+                    <Button size="sm" variant="ghost" title="Converter em pedido" onClick={() => converterEmPedido(o)}><ArrowRight className="h-4 w-4 text-success" /></Button>
+                    <Button size="sm" variant="ghost" onClick={() => openEdit(o)}><Pencil className="h-4 w-4" /></Button>
+                    <Button size="sm" variant="ghost" onClick={() => remove(o.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                  </div>
+                </div>
+              </Card>
+            ))}
           </div>
         )}
       </Card>
