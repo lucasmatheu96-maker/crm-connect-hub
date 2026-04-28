@@ -17,6 +17,7 @@ import { Plus, Users, MapPin, Search, Pencil, Trash2, ExternalLink } from "lucid
 import { toast } from "sonner";
 import { fmtDate } from "@/lib/format";
 import { openMapLocation } from "@/lib/maps";
+import { offlineInsert, offlineUpdate, offlineDelete } from "@/lib/offlineWrite";
 
 const schema = z.object({
   nome: z.string().trim().min(2, "Nome obrigatório").max(120),
@@ -70,11 +71,10 @@ export default function Clientes() {
     Object.keys(payload).forEach((k) => payload[k] === "" && (payload[k] = null));
 
     if (editing) {
-      const { error } = await supabase.from("clientes").update(payload).eq("id", editing.id);
+      const { error } = await offlineUpdate("clientes", payload, { column: "id", value: editing.id });
       if (error) { toast.error(error.message); setBusy(false); return; }
       toast.success("Cliente atualizado");
     } else {
-      // Captura localização em paralelo, mas NÃO bloqueia o cadastro se falhar
       const fallback = [form.endereco, form.cidade, form.estado, form.cep, "Brasil"]
         .filter(Boolean).join(", ");
       let geo = { geo_lat: null, geo_lng: null, geo_endereco: null } as Awaited<ReturnType<typeof captureLocation>>;
@@ -83,12 +83,11 @@ export default function Clientes() {
           captureLocation(fallback),
           new Promise<typeof geo>((resolve) => setTimeout(() => resolve(geo), 12000)),
         ]);
-      } catch {
-        // ignora — segue sem geo
-      }
-      const { error } = await supabase.from("clientes").insert({ ...payload, ...geo });
+      } catch { /* segue sem geo */ }
+      const { error, pending } = await offlineInsert("clientes", { ...payload, ...geo });
       if (error) { toast.error(error.message); setBusy(false); return; }
-      if (geo.geo_lat) toast.success("Cliente cadastrado com sucesso ✓ Localização capturada.");
+      if (pending) { /* já houve toast */ }
+      else if (geo.geo_lat) toast.success("Cliente cadastrado com sucesso ✓ Localização capturada.");
       else toast.success("Cliente cadastrado com sucesso ✓");
     }
     setBusy(false); setOpen(false); load();
@@ -96,7 +95,7 @@ export default function Clientes() {
 
   const remove = async (id: string) => {
     if (!confirm("Excluir este cliente?")) return;
-    const { error } = await supabase.from("clientes").delete().eq("id", id);
+    const { error } = await offlineDelete("clientes", { column: "id", value: id });
     if (error) toast.error(error.message); else { toast.success("Excluído"); load(); }
   };
 

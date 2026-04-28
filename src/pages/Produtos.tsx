@@ -16,6 +16,7 @@ import { Switch } from "@/components/ui/switch";
 import { Plus, Package, Search, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { fmtMoney } from "@/lib/format";
+import { offlineInsert, offlineUpdate, offlineDelete } from "@/lib/offlineWrite";
 
 const schema = z.object({
   nome: z.string().trim().min(2).max(120),
@@ -54,10 +55,9 @@ export default function Produtos() {
     setBusy(true);
     const payload: any = { ...parsed.data, owner_id: user!.id };
     Object.keys(payload).forEach((k) => payload[k] === "" && (payload[k] = null));
-    const op = editing
-      ? supabase.from("produtos").update(payload).eq("id", editing.id)
-      : supabase.from("produtos").insert(payload);
-    const { error } = await op;
+    const { error } = editing
+      ? await offlineUpdate("produtos", payload, { column: "id", value: editing.id })
+      : await offlineInsert("produtos", payload);
     setBusy(false);
     if (error) toast.error(error.message);
     else { toast.success(editing ? "Atualizado" : "Cadastrado"); setOpen(false); load(); }
@@ -65,7 +65,7 @@ export default function Produtos() {
 
   const remove = async (id: string) => {
     if (!confirm("Excluir produto?")) return;
-    const { error } = await supabase.from("produtos").delete().eq("id", id);
+    const { error } = await offlineDelete("produtos", { column: "id", value: id });
     if (error) toast.error(error.message); else { toast.success("Excluído"); load(); }
   };
 
@@ -93,7 +93,7 @@ export default function Produtos() {
                   <TableHead>Nome</TableHead>
                   <TableHead>SKU</TableHead>
                   <TableHead>Categoria</TableHead>
-                  <TableHead className="text-right">Preço</TableHead>
+                  <TableHead className="text-right">Preço sugerido</TableHead>
                   <TableHead className="text-right">Estoque</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="w-24"></TableHead>
@@ -129,7 +129,7 @@ export default function Produtos() {
             <div className="sm:col-span-2 space-y-2"><Label>Nome *</Label><Input value={form.nome || ""} onChange={(e) => setForm({ ...form, nome: e.target.value })} required /></div>
             <div className="space-y-2"><Label>SKU</Label><Input value={form.sku || ""} onChange={(e) => setForm({ ...form, sku: e.target.value })} /></div>
             <div className="space-y-2"><Label>Categoria</Label><Input value={form.categoria || ""} onChange={(e) => setForm({ ...form, categoria: e.target.value })} /></div>
-            <div className="space-y-2"><Label>Preço (R$)</Label><Input type="number" step="0.01" min="0" value={form.preco} onChange={(e) => setForm({ ...form, preco: e.target.value })} /></div>
+            <div className="space-y-2"><Label>Preço sugerido (R$)</Label><Input type="number" step="0.01" min="0" value={form.preco} onChange={(e) => setForm({ ...form, preco: e.target.value })} /></div>
             <div className="space-y-2"><Label>Estoque</Label><Input type="number" min="0" value={form.estoque} onChange={(e) => setForm({ ...form, estoque: e.target.value })} /></div>
             <div className="sm:col-span-2 space-y-2"><Label>Descrição</Label><Textarea value={form.descricao || ""} onChange={(e) => setForm({ ...form, descricao: e.target.value })} rows={3} /></div>
             <div className="flex items-center gap-2"><Switch checked={form.ativo} onCheckedChange={(v) => setForm({ ...form, ativo: v })} /><Label>Ativo</Label></div>

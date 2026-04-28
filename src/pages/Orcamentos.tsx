@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { fmtMoney, fmtDate } from "@/lib/format";
 import { ItensEditor, Item } from "@/components/ItensEditor";
 import { openMapLocation } from "@/lib/maps";
+import { offlineInsert, offlineUpdate, offlineDelete } from "@/lib/offlineWrite";
 
 const STATUSES = ["rascunho","enviado","aprovado","rejeitado","expirado"] as const;
 const statusColor: Record<string, string> = {
@@ -84,15 +85,24 @@ export default function Orcamentos() {
 
     let orcamentoId = editing?.id;
     if (editing) {
-      const { error } = await supabase.from("orcamentos").update(payload).eq("id", editing.id);
+      const { error } = await offlineUpdate("orcamentos", payload, { column: "id", value: editing.id });
       if (error) { toast.error(error.message); setBusy(false); return; }
-      await supabase.from("orcamento_itens").delete().eq("orcamento_id", editing.id);
+      // limpa itens existentes (online) ou enfileira delete por orcamento
+      if (navigator.onLine) {
+        await supabase.from("orcamento_itens").delete().eq("orcamento_id", editing.id);
+      } else {
+        await offlineDelete("orcamento_itens", { column: "orcamento_id", value: editing.id });
+      }
     } else {
-      toast.info("Capturando localização...");
+      const onlineNow = navigator.onLine;
+      if (onlineNow) toast.info("Capturando localização...");
       const geo = await captureLocation(getClienteFallbackAddress(form.cliente_id));
-      const { data, error } = await supabase.from("orcamentos").insert({ ...payload, ...geo }).select("id").single();
+      // gera UUID local para permitir vincular itens mesmo offline
+      orcamentoId = (typeof crypto !== "undefined" && (crypto as any).randomUUID)
+        ? (crypto as any).randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const { error } = await offlineInsert("orcamentos", { id: orcamentoId, ...payload, ...geo });
       if (error) { toast.error(error.message); setBusy(false); return; }
-      orcamentoId = data.id;
     }
 
     const itensRows = itens.map((i) => ({
@@ -103,8 +113,10 @@ export default function Orcamentos() {
       preco_unitario: i.preco_unitario,
       subtotal: i.quantidade * i.preco_unitario,
     }));
-    const { error: e2 } = await supabase.from("orcamento_itens").insert(itensRows);
-    if (e2) { toast.error(e2.message); setBusy(false); return; }
+    for (const row of itensRows) {
+      const { error: e2 } = await offlineInsert("orcamento_itens", row);
+      if (e2) { toast.error(e2.message); setBusy(false); return; }
+    }
 
     setBusy(false); setOpen(false); load();
     toast.success(editing ? "Orçamento atualizado" : "Orçamento criado");
@@ -112,7 +124,7 @@ export default function Orcamentos() {
 
   const remove = async (id: string) => {
     if (!confirm("Excluir orçamento?")) return;
-    const { error } = await supabase.from("orcamentos").delete().eq("id", id);
+    const { error } = await offlineDelete("orcamentos", { column: "id", value: id });
     if (error) toast.error(error.message); else { toast.success("Excluído"); load(); }
   };
 

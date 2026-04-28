@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Sheet, RefreshCw, ExternalLink } from "lucide-react";
+import { ImportadorPlanilhas } from "@/components/ImportadorPlanilhas";
 
 export default function Configuracoes() {
   const [sheetId, setSheetId] = useState("");
@@ -55,6 +56,10 @@ export default function Configuracoes() {
   return (
     <div>
       <PageHeader title="Configurações" description="Integração e sincronização (apenas administradores)" />
+
+      <div className="mb-6">
+        <ImportadorPlanilhas />
+      </div>
 
       <Card className="p-6 shadow-elevated max-w-2xl">
         <div className="flex items-center gap-3 mb-4">
