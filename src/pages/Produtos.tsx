@@ -16,6 +16,7 @@ import { Switch } from "@/components/ui/switch";
 import { Plus, Package, Search, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { fmtMoney } from "@/lib/format";
+import { offlineInsert, offlineUpdate, offlineDelete } from "@/lib/offlineWrite";
 
 const schema = z.object({
   nome: z.string().trim().min(2).max(120),
