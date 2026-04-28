@@ -18,6 +18,7 @@ import { fmtMoney, fmtDate } from "@/lib/format";
 import { ItensEditor, Item } from "@/components/ItensEditor";
 import { openMapLocation } from "@/lib/maps";
 import { offlineInsert, offlineUpdate, offlineDelete } from "@/lib/offlineWrite";
+import { SearchableSelect } from "@/components/SearchableSelect";
 
 const STATUSES = ["rascunho","enviado","aprovado","rejeitado","expirado"] as const;
 const statusColor: Record<string, string> = {
@@ -29,7 +30,8 @@ const statusColor: Record<string, string> = {
 };
 
 export default function Orcamentos() {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
+  const isAdmin = role === "admin";
   const [list, setList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
@@ -45,7 +47,7 @@ export default function Orcamentos() {
     setLoading(true);
     const [{ data: orcs }, { data: cls }] = await Promise.all([
       supabase.from("orcamentos").select("*, clientes(nome)").order("created_at", { ascending: false }),
-      supabase.from("clientes").select("id, nome, endereco, cidade, estado, cep").order("nome"),
+      supabase.from("clientes").select("id, nome, codigo_externo, empresa, endereco, cidade, estado, cep").order("nome"),
     ]);
     setList(orcs || []); setClientes(cls || []); setLoading(false);
   };
