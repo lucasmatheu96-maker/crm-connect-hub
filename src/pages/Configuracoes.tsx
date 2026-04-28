@@ -57,6 +57,10 @@ export default function Configuracoes() {
     <div>
       <PageHeader title="Configurações" description="Integração e sincronização (apenas administradores)" />
 
+      <div className="mb-6">
+        <ImportadorPlanilhas />
+      </div>
+
       <Card className="p-6 shadow-elevated max-w-2xl">
         <div className="flex items-center gap-3 mb-4">
           <div className="rounded-lg bg-brand-gradient p-2.5"><Sheet className="h-5 w-5 text-primary-foreground" /></div>
