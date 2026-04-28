@@ -98,7 +98,7 @@ export async function flush(): Promise<{ ok: number; fail: number; remaining: nu
     items.sort((a, b) => a.createdAt - b.createdAt);
     for (const it of items) {
       try {
-        let q: any = supabase.from(it.table);
+        const q: any = supabase.from(it.table as any);
         if (it.op === "insert") {
           const { error } = await q.insert(it.payload);
           if (error) throw error;
