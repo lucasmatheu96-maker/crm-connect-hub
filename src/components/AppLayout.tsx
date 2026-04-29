@@ -39,10 +39,10 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
     || (location.pathname.startsWith("/configuracoes") ? "Configurações" : "MedControl");
 
   return (
-    <div className="flex min-h-screen w-full max-w-[100vw] overflow-x-hidden bg-subtle-gradient">
+    <div className="min-h-screen w-full max-w-[100vw] overflow-x-hidden bg-subtle-gradient">
       <OnboardingPermissions />
       {/* Sidebar */}
-      <aside className="sticky top-0 hidden h-screen w-64 flex-col self-start bg-sidebar text-sidebar-foreground md:flex">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden h-screen w-64 flex-col overflow-y-auto bg-sidebar text-sidebar-foreground md:flex">
         <div className="flex items-center gap-3 px-5 py-5 border-b border-sidebar-border">
           <div className="rounded-lg bg-white p-1.5">
             <Logo size="sm" />
