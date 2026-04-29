@@ -67,11 +67,14 @@ export default function Orcamentos() {
     return [cliente.endereco, cliente.cidade, cliente.estado, cliente.cep, "Brasil"].filter(Boolean).join(", ") || null;
   };
 
-  const openNew = () => { setEditing(null); setForm({ status: "rascunho", desconto: 0 }); setItens([]); setOpen(true); };
+  const openNew = () => { setEditing(null); setForm({ status: "rascunho", desconto_pct: 0 }); setItens([]); setOpen(true); };
   const openEdit = async (o: any) => {
-    setEditing(o); setForm(o);
     const { data } = await supabase.from("orcamento_itens").select("*").eq("orcamento_id", o.id);
-    setItens((data || []).map((i: any) => ({ produto_id: i.produto_id, descricao: i.descricao, quantidade: Number(i.quantidade), preco_unitario: Number(i.preco_unitario) })));
+    const itensCarregados = (data || []).map((i: any) => ({ produto_id: i.produto_id, descricao: i.descricao, quantidade: Number(i.quantidade), preco_unitario: Number(i.preco_unitario) }));
+    const sub = itensCarregados.reduce((s, i) => s + i.quantidade * i.preco_unitario, 0);
+    const pct = sub > 0 ? (Number(o.desconto || 0) / sub) * 100 : 0;
+    setEditing(o); setForm({ ...o, desconto_pct: Number(pct.toFixed(2)) });
+    setItens(itensCarregados);
     setOpen(true);
   };
 
