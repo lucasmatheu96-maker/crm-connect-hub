@@ -255,12 +255,13 @@ export default function Usuarios() {
                   <TableHead>Status</TableHead>
                   <TableHead>Cadastrado</TableHead>
                   <TableHead>Primeiro acesso</TableHead>
+                  <TableHead className="text-center" title="Captura de localização a cada 2h, 8h-18h, dias úteis">Rastrear GPS</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {emails.length === 0 && !loading && (
-                  <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                     Nenhum e-mail autorizado ainda. Adicione um para liberar o acesso.
                   </TableCell></TableRow>
                 )}
@@ -283,6 +284,15 @@ export default function Usuarios() {
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground">{fmtDateTime(a.created_at)}</TableCell>
                       <TableCell className="text-xs text-muted-foreground">{a.activated_at ? fmtDateTime(a.activated_at) : "—"}</TableCell>
+                      <TableCell className="text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <Switch
+                            checked={!!a.track_location}
+                            onCheckedChange={(v) => toggleTracking(a, v)}
+                            disabled={a.status !== "ativo"}
+                          />
+                        </div>
+                      </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
                           {a.status !== "ativo" && (
