@@ -134,8 +134,11 @@ export default function Funil() {
                     className="p-3 shadow-soft cursor-grab active:cursor-grabbing hover:shadow-elevated transition-shadow"
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <div className="text-sm font-semibold leading-tight">{it.titulo}</div>
-                      <button onClick={() => remove(it.id)} className="text-muted-foreground hover:text-destructive"><MoreVertical className="h-4 w-4" /></button>
+                      <div className="text-sm font-semibold leading-tight flex-1 min-w-0">{it.titulo}</div>
+                      <div className="flex gap-0.5 shrink-0">
+                        <button type="button" onClick={(e) => { e.stopPropagation(); openEdit(it); }} className="text-muted-foreground hover:text-primary p-0.5" title="Editar"><Pencil className="h-3.5 w-3.5" /></button>
+                        <button type="button" onClick={(e) => { e.stopPropagation(); remove(it.id); }} className="text-muted-foreground hover:text-destructive p-0.5" title="Excluir"><Trash2 className="h-3.5 w-3.5" /></button>
+                      </div>
                     </div>
                     {it.clientes?.nome && <div className="text-xs text-muted-foreground mt-1">{it.clientes.nome}</div>}
                     <div className="mt-2 flex items-center justify-between">
@@ -158,7 +161,7 @@ export default function Funil() {
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Nova oportunidade</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{editing ? "Editar oportunidade" : "Nova oportunidade"}</DialogTitle></DialogHeader>
           <form onSubmit={save} className="grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2 space-y-2"><Label>Título *</Label><Input value={form.titulo || ""} onChange={(e) => setForm({ ...form, titulo: e.target.value })} required maxLength={200} /></div>
             <div className="sm:col-span-2 space-y-2">
