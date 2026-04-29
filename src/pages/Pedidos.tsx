@@ -11,13 +11,14 @@ import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ShoppingCart, Pencil, Trash2, MapPin, Undo2, Eye } from "lucide-react";
+import { ShoppingCart, Pencil, Trash2, MapPin, Undo2, Eye, FileDown } from "lucide-react";
 import { toast } from "sonner";
 import { fmtMoney, fmtDate } from "@/lib/format";
 import { ItensEditor, Item } from "@/components/ItensEditor";
 import { offlineUpdate, offlineDelete } from "@/lib/offlineWrite";
 import { SearchableSelect } from "@/components/SearchableSelect";
 import { DetailsDialog } from "@/components/DetailsDialog";
+import { generateDocumentoPDF } from "@/lib/pdf";
 
 const STATUSES = ["novo","confirmado","em_separacao","faturado","enviado","entregue","cancelado"] as const;
 const statusColor: Record<string, string> = {
