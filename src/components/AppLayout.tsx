@@ -171,10 +171,10 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
           </DropdownMenu>
         </header>
 
-        <main className="flex-1 p-4 md:p-8">{children}</main>
+        <main className="flex-1 overflow-x-hidden p-4 md:p-8">{children}</main>
 
         {/* Mobile bottom nav */}
-        <nav className="sticky bottom-0 z-20 flex overflow-x-auto border-t bg-background md:hidden">
+        <nav className="sticky bottom-0 z-20 flex overflow-x-auto overflow-y-hidden border-t bg-background md:hidden">
           {[
             ...nav,
             ...(role === "admin"
@@ -190,7 +190,7 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
               end={end}
               className={({ isActive }) =>
                 cn(
-                  "flex min-w-[64px] flex-1 flex-col items-center gap-1 py-2 text-[10px]",
+                  "flex shrink-0 basis-[72px] flex-col items-center gap-1 py-2 text-[10px]",
                   isActive ? "text-primary" : "text-muted-foreground",
                 )
               }
