@@ -151,6 +151,21 @@ export default function Produtos() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <DetailsDialog
+        open={!!viewing}
+        onOpenChange={(v) => !v && setViewing(null)}
+        title={viewing?.nome || "Produto"}
+        rows={viewing ? [
+          { label: "SKU", value: viewing.sku },
+          { label: "Categoria", value: viewing.categoria },
+          { label: "Unidade", value: viewing.unidade },
+          { label: "Preço sugerido", value: fmtMoney(viewing.preco) },
+          { label: "Estoque (saldo)", value: viewing.disponivel ?? viewing.estoque },
+          { label: "Status", value: viewing.ativo ? "Ativo" : "Inativo" },
+          { label: "Descrição", value: viewing.descricao },
+        ] : []}
+      />
     </div>
   );
 }
