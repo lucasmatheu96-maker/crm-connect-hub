@@ -154,6 +154,33 @@ export default function Pedidos() {
     load();
   };
 
+  const exportPDF = async (p: any) => {
+    try {
+      const [{ data: itensData }, { data: clienteData }] = await Promise.all([
+        supabase.from("pedido_itens").select("*").eq("pedido_id", p.id),
+        supabase.from("clientes").select("nome, empresa, cpf_cnpj, email, telefone, endereco, cidade, estado, cep").eq("id", p.cliente_id).maybeSingle(),
+      ]);
+      await generateDocumentoPDF({
+        kind: "pedido",
+        numero: p.numero,
+        status: p.status,
+        created_at: p.created_at,
+        desconto: p.desconto,
+        total: p.total,
+        observacoes: p.observacoes,
+        vendedorNome: p._vendedorNome,
+        geo_endereco: p.geo_endereco,
+        cliente: clienteData,
+        itens: (itensData || []).map((i: any) => ({
+          descricao: i.descricao, quantidade: Number(i.quantidade),
+          preco_unitario: Number(i.preco_unitario), subtotal: Number(i.subtotal),
+        })),
+      });
+    } catch (e: any) {
+      toast.error("Falha ao gerar PDF: " + (e?.message || ""));
+    }
+  };
+
   return (
     <div>
       <PageHeader title="Pedidos" description="Acompanhamento de vendas e entregas" />
