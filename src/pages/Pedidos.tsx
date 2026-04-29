@@ -175,8 +175,8 @@ export default function Pedidos() {
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <div className="font-mono text-xs text-muted-foreground">#{p.numero}</div>
-                    <div className="font-medium truncate">{p.clientes?.nome || "—"}</div>
-                    <div className="text-xs text-muted-foreground truncate">Vend.: {p._vendedorNome}</div>
+                    <div className="font-medium truncate" title={p.clientes?.nome || "—"}>{p.clientes?.nome || "—"}</div>
+                    <div className="text-xs text-muted-foreground truncate" title={`Vend.: ${p._vendedorNome}`}>Vend.: {p._vendedorNome}</div>
                   </div>
                   <Badge className={`${statusColor[p.status]} shrink-0`}>{p.status.replace("_"," ")}</Badge>
                 </div>
