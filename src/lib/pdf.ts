@@ -15,7 +15,9 @@ export interface PdfDocInput {
   total?: number | null;
   observacoes?: string | null;
   vendedorNome?: string | null;
-  geo_endereco?: string | null;
+  forma_pagamento?: string | null;
+  prazo_entrega?: string | null;
+  frete?: string | null;
   cliente: {
     nome?: string | null;
     empresa?: string | null;
@@ -73,10 +75,10 @@ export async function generateDocumentoPDF(input: PdfDocInput) {
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(20);
-  doc.text("MedControl CRM", margin + 85, 42);
+  doc.text("MedControl", margin + 85, 42);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
-  doc.text("Soluções comerciais inteligentes", margin + 85, 58);
+  doc.text("CNPJ: 10.203.274/0001-31", margin + 85, 58);
 
   // Título e número à direita
   doc.setFont("helvetica", "bold");
@@ -159,7 +161,9 @@ export async function generateDocumentoPDF(input: PdfDocInput) {
   const infoRows: Array<[string, string]> = [];
   if (input.vendedorNome) infoRows.push(["Vendedor", input.vendedorNome]);
   if (input.validade) infoRows.push(["Validade", fmtDate(input.validade)]);
-  if (input.geo_endereco) infoRows.push(["Local de emissão (GPS)", input.geo_endereco]);
+  if (input.forma_pagamento) infoRows.push(["Forma de pagamento", input.forma_pagamento]);
+  if (input.prazo_entrega) infoRows.push(["Prazo de entrega", input.prazo_entrega]);
+  if (input.frete) infoRows.push(["Frete", input.frete]);
 
   for (const [k, v] of infoRows) {
     doc.setFont("helvetica", "bold");
@@ -257,7 +261,7 @@ export async function generateDocumentoPDF(input: PdfDocInput) {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
     doc.setTextColor(100, 116, 139);
-    doc.text("MedControl CRM — Documento gerado automaticamente", margin, pageHeight - 24);
+    doc.text("MedControl — CNPJ: 10.203.274/0001-31", margin, pageHeight - 24);
     doc.text(`Página ${i} de ${pageCount}`, pageWidth - margin, pageHeight - 24, { align: "right" });
   }
 
