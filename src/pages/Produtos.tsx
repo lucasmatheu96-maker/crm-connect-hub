@@ -106,6 +106,10 @@ export default function Produtos() {
                     <div className="text-[10px] uppercase text-muted-foreground tracking-wide">Preço sugerido</div>
                     <div className="text-lg font-semibold">{fmtMoney(p.preco)}</div>
                   </div>
+                  <div className="text-center">
+                    <div className="text-[10px] uppercase text-muted-foreground tracking-wide">Unidade</div>
+                    <div className="text-lg font-semibold">{p.unidade || "—"}</div>
+                  </div>
                   <div className="text-right">
                     <div className="text-[10px] uppercase text-muted-foreground tracking-wide">Estoque</div>
                     <div className={`text-lg font-semibold ${(p.disponivel ?? p.estoque) < 0 ? "text-destructive" : ""}`}>{p.disponivel ?? p.estoque}</div>
