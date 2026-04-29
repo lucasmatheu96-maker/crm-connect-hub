@@ -207,7 +207,7 @@ export default function Orcamentos() {
           : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {listFiltrada.map((o) => (
-              <Card key={o.id} className="p-4 hover:shadow-elevated transition-shadow">
+              <Card key={o.id} className="p-4 hover:shadow-elevated transition-shadow min-w-0">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <div className="font-mono text-xs text-muted-foreground">#{o.numero}</div>
