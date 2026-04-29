@@ -52,7 +52,6 @@ export default function Funil() {
     e.preventDefault();
     if (!form.titulo) { toast.error("Informe um título"); return; }
     setBusy(true);
-    toast.info("Capturando localização...");
     const geo = await captureLocation();
     const { error } = await supabase.from("oportunidades").insert({
       titulo: form.titulo, descricao: form.descricao || null,

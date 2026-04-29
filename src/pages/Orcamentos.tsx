@@ -110,8 +110,6 @@ export default function Orcamentos() {
         await offlineDelete("orcamento_itens", { column: "orcamento_id", value: editing.id });
       }
     } else {
-      const onlineNow = navigator.onLine;
-      if (onlineNow) toast.info("Capturando localização...");
       const geo = await captureLocation(getClienteFallbackAddress(form.cliente_id));
       // gera UUID local para permitir vincular itens mesmo offline
       orcamentoId = (typeof crypto !== "undefined" && (crypto as any).randomUUID)
@@ -281,7 +279,7 @@ export default function Orcamentos() {
               <div><div className="text-muted-foreground">Total final</div><div className="font-bold text-primary text-base">{fmtMoney(totalCalculado)}</div></div>
             </div>
 
-            {!editing && isAdmin && <div className="flex items-start gap-2 rounded-lg bg-accent-soft p-3 text-xs text-accent"><MapPin className="h-4 w-4 shrink-0 mt-0.5" /><span>Localização atual será capturada ao salvar.</span></div>}
+            
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
