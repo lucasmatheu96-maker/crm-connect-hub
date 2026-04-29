@@ -14,6 +14,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { OnboardingPermissions } from "@/components/OnboardingPermissions";
+import { useLocationTracking } from "@/hooks/useLocationTracking";
 
 const nav = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
@@ -27,6 +28,7 @@ const nav = [
 export const AppLayout = ({ children }: { children: ReactNode }) => {
   const { user, role, signOut } = useAuth();
   const location = useLocation();
+  useLocationTracking();
 
   const initials = (user?.user_metadata?.nome || user?.email || "U")
     .split(" ").map((s: string) => s[0]).slice(0, 2).join("").toUpperCase();
