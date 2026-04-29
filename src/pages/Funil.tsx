@@ -190,7 +190,7 @@ export default function Funil() {
             <div className="sm:col-span-2 space-y-2"><Label>Descrição</Label><Textarea value={form.descricao || ""} onChange={(e) => setForm({ ...form, descricao: e.target.value })} maxLength={2000} rows={3} /></div>
             <DialogFooter className="sm:col-span-2">
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-              <Button type="submit" variant="brand" disabled={busy}>{busy ? "Salvando..." : "Criar"}</Button>
+              <Button type="submit" variant="brand" disabled={busy}>{busy ? "Salvando..." : (editing ? "Atualizar" : "Criar")}</Button>
             </DialogFooter>
           </form>
         </DialogContent>
