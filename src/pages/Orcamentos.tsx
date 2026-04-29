@@ -192,6 +192,34 @@ export default function Orcamentos() {
     if (!opened) toast.info("Não foi possível abrir o mapa aqui. Copiamos o link para você colar no navegador.");
   };
 
+  const exportPDF = async (o: any) => {
+    try {
+      const [{ data: itensData }, { data: clienteData }] = await Promise.all([
+        supabase.from("orcamento_itens").select("*").eq("orcamento_id", o.id),
+        supabase.from("clientes").select("nome, empresa, cpf_cnpj, email, telefone, endereco, cidade, estado, cep").eq("id", o.cliente_id).maybeSingle(),
+      ]);
+      await generateDocumentoPDF({
+        kind: "orcamento",
+        numero: o.numero,
+        status: o.status,
+        created_at: o.created_at,
+        validade: o.validade,
+        desconto: o.desconto,
+        total: o.total,
+        observacoes: o.observacoes,
+        vendedorNome: o._vendedorNome,
+        geo_endereco: o.geo_endereco,
+        cliente: clienteData,
+        itens: (itensData || []).map((i: any) => ({
+          descricao: i.descricao, quantidade: Number(i.quantidade),
+          preco_unitario: Number(i.preco_unitario), subtotal: Number(i.subtotal),
+        })),
+      });
+    } catch (e: any) {
+      toast.error("Falha ao gerar PDF: " + (e?.message || ""));
+    }
+  };
+
   return (
     <div>
       <PageHeader title="Orçamentos" description="Propostas comerciais e cotações" actions={<Button variant="brand" onClick={openNew}><Plus className="h-4 w-4" /> Novo orçamento</Button>} />
