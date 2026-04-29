@@ -130,6 +130,7 @@ export default function Produtos() {
             <div className="sm:col-span-2 space-y-2"><Label>Nome *</Label><Input value={form.nome || ""} onChange={(e) => setForm({ ...form, nome: e.target.value })} required /></div>
             <div className="space-y-2"><Label>SKU</Label><Input value={form.sku || ""} onChange={(e) => setForm({ ...form, sku: e.target.value })} /></div>
             <div className="space-y-2"><Label>Categoria</Label><Input value={form.categoria || ""} onChange={(e) => setForm({ ...form, categoria: e.target.value })} /></div>
+            <div className="space-y-2"><Label>Unidade de medida</Label><Input value={form.unidade || ""} disabled readOnly placeholder="(da planilha)" /></div>
             <div className="space-y-2"><Label>Preço sugerido (R$)</Label><Input type="number" step="0.01" min="0" value={form.preco} onChange={(e) => setForm({ ...form, preco: e.target.value })} /></div>
             <div className="space-y-2"><Label>Estoque</Label><Input type="number" min="0" value={form.estoque} onChange={(e) => setForm({ ...form, estoque: e.target.value })} /></div>
             <div className="sm:col-span-2 space-y-2"><Label>Descrição</Label><Textarea value={form.descricao || ""} onChange={(e) => setForm({ ...form, descricao: e.target.value })} rows={3} /></div>

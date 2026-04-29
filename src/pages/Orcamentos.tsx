@@ -67,13 +67,21 @@ export default function Orcamentos() {
     return [cliente.endereco, cliente.cidade, cliente.estado, cliente.cep, "Brasil"].filter(Boolean).join(", ") || null;
   };
 
-  const openNew = () => { setEditing(null); setForm({ status: "rascunho", desconto: 0 }); setItens([]); setOpen(true); };
+  const openNew = () => { setEditing(null); setForm({ status: "rascunho", desconto_pct: 0 }); setItens([]); setOpen(true); };
   const openEdit = async (o: any) => {
-    setEditing(o); setForm(o);
     const { data } = await supabase.from("orcamento_itens").select("*").eq("orcamento_id", o.id);
-    setItens((data || []).map((i: any) => ({ produto_id: i.produto_id, descricao: i.descricao, quantidade: Number(i.quantidade), preco_unitario: Number(i.preco_unitario) })));
+    const itensCarregados = (data || []).map((i: any) => ({ produto_id: i.produto_id, descricao: i.descricao, quantidade: Number(i.quantidade), preco_unitario: Number(i.preco_unitario) }));
+    const sub = itensCarregados.reduce((s, i) => s + i.quantidade * i.preco_unitario, 0);
+    const pct = sub > 0 ? (Number(o.desconto || 0) / sub) * 100 : 0;
+    setEditing(o); setForm({ ...o, desconto_pct: Number(pct.toFixed(2)) });
+    setItens(itensCarregados);
     setOpen(true);
   };
+
+  const subtotalAtual = itens.reduce((s, i) => s + Number(i.quantidade) * Number(i.preco_unitario), 0);
+  const descontoPctNum = Number(form.desconto_pct || 0);
+  const descontoValor = (subtotalAtual * descontoPctNum) / 100;
+  const totalCalculado = Math.max(0, subtotalAtual - descontoValor);
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,15 +89,12 @@ export default function Orcamentos() {
     if (itens.length === 0) { toast.error("Adicione ao menos um item"); return; }
     setBusy(true);
 
-    const subtotal = itens.reduce((s, i) => s + Number(i.quantidade) * Number(i.preco_unitario), 0);
-    const total = Math.max(0, subtotal - Number(form.desconto || 0));
-
     const payload: any = {
       cliente_id: form.cliente_id,
       status: form.status,
       validade: form.validade || null,
-      desconto: Number(form.desconto || 0),
-      total,
+      desconto: Number(descontoValor.toFixed(2)),
+      total: Number(totalCalculado.toFixed(2)),
       observacoes: form.observacoes || null,
       owner_id: user!.id,
     };
@@ -265,10 +270,16 @@ export default function Orcamentos() {
                 </Select>
               </div>
               <div className="space-y-2"><Label>Validade</Label><Input type="date" value={form.validade || ""} onChange={(e) => setForm({ ...form, validade: e.target.value })} /></div>
-              <div className="space-y-2"><Label>Desconto (R$)</Label><Input type="number" step="0.01" min="0" value={form.desconto || 0} onChange={(e) => setForm({ ...form, desconto: e.target.value })} /></div>
+              <div className="space-y-2"><Label>Desconto (%)</Label><Input type="number" step="0.01" min="0" max="100" value={form.desconto_pct ?? 0} onChange={(e) => setForm({ ...form, desconto_pct: e.target.value })} /></div>
             </div>
 
             <ItensEditor itens={itens} onChange={setItens} />
+
+            <div className="rounded-lg border bg-muted/30 p-3 grid grid-cols-3 gap-2 text-xs">
+              <div><div className="text-muted-foreground">Subtotal</div><div className="font-semibold">{fmtMoney(subtotalAtual)}</div></div>
+              <div><div className="text-muted-foreground">Desconto ({descontoPctNum}%)</div><div className="font-semibold text-destructive">- {fmtMoney(descontoValor)}</div></div>
+              <div><div className="text-muted-foreground">Total final</div><div className="font-bold text-primary text-base">{fmtMoney(totalCalculado)}</div></div>
+            </div>
 
             {!editing && isAdmin && <div className="flex items-start gap-2 rounded-lg bg-accent-soft p-3 text-xs text-accent"><MapPin className="h-4 w-4 shrink-0 mt-0.5" /><span>Localização atual será capturada ao salvar.</span></div>}
 
