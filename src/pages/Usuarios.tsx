@@ -51,14 +51,28 @@ interface AccessLog {
   id: string;
   email: string | null;
   user_id: string | null;
-  action: "login" | "login_blocked" | "logout" | "signup";
+  action: "login" | "login_blocked" | "logout" | "signup" | "location_capture" | string;
   success: boolean;
   reason: string | null;
+  reason_context: string | null;
+  ref_table: string | null;
+  ref_id: string | null;
+  geo_lat: number | null;
+  geo_lng: number | null;
+  geo_endereco: string | null;
   ip: string | null;
   user_agent: string | null;
   provider: string | null;
   created_at: string;
 }
+
+const reasonContextLabel: Record<string, string> = {
+  cadastro_orcamento: "Cadastro de orçamento",
+  conversao_pedido: "Conversão em pedido",
+  cadastro_cliente: "Cadastro de cliente",
+  cadastro_oportunidade: "Cadastro no funil",
+  ping_periodico: "Captura periódica (2h)",
+};
 
 const emailSchema = z.object({
   email: z.string().trim().email("E-mail inválido").max(255),
@@ -92,7 +106,7 @@ export default function Usuarios() {
     setLoading(true);
     const [{ data: e }, { data: l }] = await Promise.all([
       supabase.from("authorized_emails").select("*").order("created_at", { ascending: false }),
-      supabase.from("access_logs").select("*").order("created_at", { ascending: false }).limit(200),
+      supabase.from("access_logs").select("*").order("created_at", { ascending: false }).limit(500),
     ]);
     setEmails((e as AuthorizedEmail[]) || []);
     setLogs((l as AccessLog[]) || []);
@@ -242,7 +256,7 @@ export default function Usuarios() {
       <Tabs defaultValue="usuarios">
         <TabsList>
           <TabsTrigger value="usuarios"><ShieldCheck className="h-4 w-4 mr-1" /> Usuários autorizados</TabsTrigger>
-          <TabsTrigger value="logs"><Activity className="h-4 w-4 mr-1" /> Logs de acesso</TabsTrigger>
+          <TabsTrigger value="logs"><Activity className="h-4 w-4 mr-1" /> Logs</TabsTrigger>
         </TabsList>
 
         <TabsContent value="usuarios" className="mt-4">
@@ -345,9 +359,9 @@ export default function Usuarios() {
                   <TableHead>Data/Hora</TableHead>
                   <TableHead>E-mail</TableHead>
                   <TableHead>Ação</TableHead>
+                  <TableHead>Motivo / Contexto</TableHead>
+                  <TableHead>Localização</TableHead>
                   <TableHead>Resultado</TableHead>
-                  <TableHead>Provedor</TableHead>
-                  <TableHead>IP</TableHead>
                   <TableHead>Dispositivo</TableHead>
                 </TableRow>
               </TableHeader>
@@ -357,27 +371,48 @@ export default function Usuarios() {
                     Nenhum registro ainda.
                   </TableCell></TableRow>
                 )}
-                {logs.map((l) => (
-                  <TableRow key={l.id}>
-                    <TableCell className="text-xs whitespace-nowrap">{fmtDateTime(l.created_at)}</TableCell>
-                    <TableCell className="text-xs">{l.email || "—"}</TableCell>
-                    <TableCell><Badge variant="outline" className="uppercase text-[10px]">{l.action}</Badge></TableCell>
-                    <TableCell>
-                      {l.success ? (
-                        <span className="inline-flex items-center gap-1 text-xs text-success"><CheckCircle2 className="h-3 w-3" /> OK</span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 text-xs text-destructive" title={l.reason || ""}>
-                          <XCircle className="h-3 w-3" /> {l.reason || "Falha"}
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-xs">{l.provider || "—"}</TableCell>
-                    <TableCell className="text-xs font-mono">{l.ip || "—"}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground max-w-[280px] truncate" title={l.user_agent || ""}>
-                      {parseUA(l.user_agent)}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {logs.map((l) => {
+                  const isLoc = l.action === "location_capture";
+                  const ctxLabel = l.reason_context ? (reasonContextLabel[l.reason_context] || l.reason_context) : null;
+                  return (
+                    <TableRow key={l.id}>
+                      <TableCell className="text-xs whitespace-nowrap">{fmtDateTime(l.created_at)}</TableCell>
+                      <TableCell className="text-xs">{l.email || "—"}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={`uppercase text-[10px] ${isLoc ? "border-primary/40 text-primary" : ""}`}>
+                          {isLoc ? "GPS" : l.action}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-xs">
+                        {ctxLabel ? <span className="font-medium">{ctxLabel}</span> : (l.provider ? <span className="text-muted-foreground">{l.provider}</span> : "—")}
+                      </TableCell>
+                      <TableCell className="text-xs">
+                        {l.geo_lat != null && l.geo_lng != null ? (
+                          <a
+                            href={`https://www.google.com/maps?q=${l.geo_lat},${l.geo_lng}`}
+                            target="_blank" rel="noreferrer"
+                            className="inline-flex items-center gap-1 text-primary hover:underline max-w-[260px] truncate"
+                            title={l.geo_endereco || `${l.geo_lat}, ${l.geo_lng}`}
+                          >
+                            {l.geo_endereco || `${l.geo_lat?.toFixed(4)}, ${l.geo_lng?.toFixed(4)}`}
+                          </a>
+                        ) : <span className="text-muted-foreground">—</span>}
+                      </TableCell>
+                      <TableCell>
+                        {l.success ? (
+                          <span className="inline-flex items-center gap-1 text-xs text-success"><CheckCircle2 className="h-3 w-3" /> OK</span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-xs text-destructive" title={l.reason || ""}>
+                            <XCircle className="h-3 w-3" /> {l.reason || "Falha"}
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground max-w-[220px] truncate" title={l.user_agent || ""}>
+                        {parseUA(l.user_agent)}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </Card>
