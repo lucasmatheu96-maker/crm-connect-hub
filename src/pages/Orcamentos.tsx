@@ -325,6 +325,35 @@ export default function Orcamentos() {
               <div className="space-y-2"><Label>Desconto (%)</Label><Input type="number" step="0.01" min="0" max="100" value={form.desconto_pct ?? 0} onChange={(e) => setForm({ ...form, desconto_pct: e.target.value })} /></div>
             </div>
 
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div className="space-y-2">
+                <Label>Forma de pagamento</Label>
+                <Input
+                  value={form.forma_pagamento || ""}
+                  onChange={(e) => setForm({ ...form, forma_pagamento: e.target.value })}
+                  placeholder="Ex.: 30/60/90 dias, à vista, boleto..."
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Prazo de entrega</Label>
+                <Input
+                  value={form.prazo_entrega || ""}
+                  onChange={(e) => setForm({ ...form, prazo_entrega: e.target.value })}
+                  placeholder="Ex.: 15 dias úteis"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Frete</Label>
+                <Select value={form.frete || ""} onValueChange={(v) => setForm({ ...form, frete: v })}>
+                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="FOB">FOB</SelectItem>
+                    <SelectItem value="CIF">CIF</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
             <ItensEditor itens={itens} onChange={setItens} />
 
             <div className="rounded-lg border bg-muted/30 p-3 grid grid-cols-3 gap-2 text-xs">
