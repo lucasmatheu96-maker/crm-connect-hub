@@ -11,7 +11,7 @@ import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ShoppingCart, Pencil, Trash2, MapPin } from "lucide-react";
+import { ShoppingCart, Pencil, Trash2, MapPin, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import { fmtMoney, fmtDate } from "@/lib/format";
 import { ItensEditor, Item } from "@/components/ItensEditor";
@@ -104,6 +104,41 @@ export default function Pedidos() {
     if (error) toast.error(error.message); else { toast.success("Excluído"); load(); }
   };
 
+  const revertToOrcamento = async (p: any) => {
+    if (!confirm(`Reverter pedido #${p.numero} para orçamento?`)) return;
+    // Cria orçamento espelho
+    const { data: orc, error: errOrc } = await supabase.from("orcamentos").insert({
+      cliente_id: p.cliente_id,
+      owner_id: p.owner_id,
+      status: "rascunho",
+      desconto: p.desconto || 0,
+      total: p.total || 0,
+      observacoes: p.observacoes || null,
+    }).select("id, numero").single();
+    if (errOrc || !orc) { toast.error(errOrc?.message || "Falha ao criar orçamento"); return; }
+
+    // Copia itens
+    const { data: itensPed } = await supabase.from("pedido_itens").select("*").eq("pedido_id", p.id);
+    if (itensPed && itensPed.length > 0) {
+      const novos = itensPed.map((i: any) => ({
+        orcamento_id: orc.id,
+        produto_id: i.produto_id,
+        descricao: i.descricao,
+        quantidade: i.quantidade,
+        preco_unitario: i.preco_unitario,
+        subtotal: i.subtotal,
+      }));
+      await supabase.from("orcamento_itens").insert(novos);
+    }
+
+    // Remove pedido original
+    const { error: errDel } = await supabase.from("pedidos").delete().eq("id", p.id);
+    if (errDel) { toast.error("Orçamento criado, mas falhou ao remover pedido: " + errDel.message); return; }
+
+    toast.success(`Pedido revertido para orçamento #${orc.numero}`);
+    load();
+  };
+
   return (
     <div>
       <PageHeader title="Pedidos" description="Acompanhamento de vendas e entregas" />
@@ -150,12 +185,17 @@ export default function Pedidos() {
                     )}
                   </div>
                 </div>
-                {isAdmin && (
-                  <div className="mt-3 flex justify-end gap-1 border-t pt-2">
-                    <Button size="sm" variant="ghost" onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /></Button>
-                    <Button size="sm" variant="ghost" onClick={() => remove(p.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                  </div>
-                )}
+                <div className="mt-3 flex justify-end gap-1 border-t pt-2">
+                  <Button size="sm" variant="ghost" onClick={() => revertToOrcamento(p)} title="Reverter para orçamento">
+                    <Undo2 className="h-4 w-4" />
+                  </Button>
+                  {isAdmin && (
+                    <>
+                      <Button size="sm" variant="ghost" onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /></Button>
+                      <Button size="sm" variant="ghost" onClick={() => remove(p.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                    </>
+                  )}
+                </div>
               </Card>
             ))}
           </div>

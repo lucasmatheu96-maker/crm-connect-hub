@@ -228,7 +228,7 @@ Deno.serve(async (req: Request) => {
           preco: preco,
           preco_sugerido: preco,
           disponivel: disponivel,
-          estoque: Math.max(0, Math.floor(disponivel)),
+          estoque: Math.floor(disponivel),
           ativo: true,
         };
 
