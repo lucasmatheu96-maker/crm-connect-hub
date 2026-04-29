@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, FileText, Pencil, Trash2, MapPin, ArrowRight, Eye } from "lucide-react";
+import { Plus, FileText, Pencil, Trash2, MapPin, ArrowRight, Eye, FileDown } from "lucide-react";
 import { toast } from "sonner";
 import { fmtMoney, fmtDate } from "@/lib/format";
 import { ItensEditor, Item } from "@/components/ItensEditor";
@@ -21,6 +21,7 @@ import { openMapLocation } from "@/lib/maps";
 import { offlineInsert, offlineUpdate, offlineDelete } from "@/lib/offlineWrite";
 import { SearchableSelect } from "@/components/SearchableSelect";
 import { DetailsDialog } from "@/components/DetailsDialog";
+import { generateDocumentoPDF } from "@/lib/pdf";
 
 const STATUSES = ["rascunho","enviado","aprovado","rejeitado","expirado"] as const;
 const statusColor: Record<string, string> = {
