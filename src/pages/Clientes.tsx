@@ -51,6 +51,7 @@ export default function Clientes() {
   const [editing, setEditing] = useState<any>(null);
   const [search, setSearch] = useState("");
   const [busy, setBusy] = useState(false);
+  const [viewing, setViewing] = useState<any>(null);
 
   const [form, setForm] = useState<any>({});
 
@@ -150,6 +151,7 @@ export default function Clientes() {
                     {c.empresa && <div className="text-xs text-muted-foreground truncate mt-0.5">{c.empresa}</div>}
                   </div>
                   <div className="flex gap-0.5 shrink-0">
+                    <Button size="sm" variant="ghost" title="Ver detalhes" onClick={() => setViewing(c)}><Eye className="h-4 w-4" /></Button>
                     <Button size="sm" variant="ghost" onClick={() => openEdit(c)}><Pencil className="h-4 w-4" /></Button>
                     <Button size="sm" variant="ghost" onClick={() => remove(c.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                   </div>
@@ -210,6 +212,28 @@ export default function Clientes() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <DetailsDialog
+        open={!!viewing}
+        onOpenChange={(v) => !v && setViewing(null)}
+        title={viewing?.nome || "Cliente"}
+        rows={viewing ? [
+          { label: "Código", value: (viewing as any).codigo_externo },
+          { label: "Empresa", value: (viewing as any).empresa },
+          { label: "CPF / CNPJ", value: (viewing as any).cpf_cnpj },
+          { label: "E-mail", value: viewing.email },
+          { label: "Telefone", value: viewing.telefone },
+          { label: "CEP", value: (viewing as any).cep },
+          { label: "Endereço", value: (viewing as any).endereco },
+          { label: "Cidade", value: viewing.cidade },
+          { label: "Estado", value: viewing.estado },
+          { label: "Observações", value: (viewing as any).observacoes },
+          { label: "Cadastrado em", value: fmtDate(viewing.created_at) },
+          { label: "GPS", value: viewing.geo_lat && viewing.geo_lng
+            ? <button type="button" onClick={() => handleOpenMap(viewing.geo_lat!, viewing.geo_lng!)} className="inline-flex items-center gap-1 text-primary hover:underline"><MapPin className="h-3 w-3" /> Ver mapa</button>
+            : "—" },
+        ] : []}
+      />
     </div>
   );
 }
