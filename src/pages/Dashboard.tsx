@@ -158,13 +158,14 @@ export default function Dashboard() {
                   <button
                     type="button"
                     onClick={() => setDetail({ mode: rankMode, key: r.key, nome: r.nome })}
-                    className="w-full flex items-center justify-between gap-3 rounded-lg p-2 hover:bg-accent/50 transition-colors text-left"
+                    className="w-full flex items-center justify-between gap-3 rounded-lg p-2 hover:bg-accent/50 transition-colors text-left min-w-0"
+                    title={r.nome}
                   >
-                    <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
                       <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-gradient text-[11px] font-bold text-primary-foreground">
                         {i + 1}
                       </span>
-                      <span className="truncate text-sm font-medium">{r.nome}</span>
+                      <span className="truncate text-sm font-medium min-w-0 flex-1">{r.nome}</span>
                     </div>
                     <span className="text-sm font-semibold text-primary shrink-0">{fmtMoney(r.total)}</span>
                   </button>
@@ -231,9 +232,9 @@ function DetailModal({ detail, onClose, pedidos, orcamentos, pedidoItens }: any)
     <Dialog open={!!detail} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            {detail?.nome}
-            <Badge variant="secondary" className="text-[10px]">{detail?.mode}</Badge>
+          <DialogTitle className="flex items-center gap-2 min-w-0">
+            <span className="truncate min-w-0 flex-1" title={detail?.nome}>{detail?.nome}</span>
+            <Badge variant="secondary" className="text-[10px] shrink-0">{detail?.mode}</Badge>
           </DialogTitle>
         </DialogHeader>
 
