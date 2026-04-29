@@ -52,7 +52,7 @@ export function useLocationTracking() {
       if (!isWithinWindow(new Date())) return;
       const last = Number(localStorage.getItem(LAST_PING_KEY) || 0);
       if (Date.now() - last < PING_INTERVAL_MS) return;
-      const geo = await captureLocation();
+      const geo = await captureLocation(null, { reason: "ping_periodico" });
       if (geo.geo_lat == null || geo.geo_lng == null) return;
       const { error } = await supabase.from("location_pings").insert({
         user_id: user.id,

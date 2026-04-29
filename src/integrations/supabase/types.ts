@@ -19,10 +19,16 @@ export type Database = {
           action: string
           created_at: string
           email: string | null
+          geo_endereco: string | null
+          geo_lat: number | null
+          geo_lng: number | null
           id: string
           ip: string | null
           provider: string | null
           reason: string | null
+          reason_context: string | null
+          ref_id: string | null
+          ref_table: string | null
           success: boolean
           user_agent: string | null
           user_id: string | null
@@ -31,10 +37,16 @@ export type Database = {
           action: string
           created_at?: string
           email?: string | null
+          geo_endereco?: string | null
+          geo_lat?: number | null
+          geo_lng?: number | null
           id?: string
           ip?: string | null
           provider?: string | null
           reason?: string | null
+          reason_context?: string | null
+          ref_id?: string | null
+          ref_table?: string | null
           success?: boolean
           user_agent?: string | null
           user_id?: string | null
@@ -43,10 +55,16 @@ export type Database = {
           action?: string
           created_at?: string
           email?: string | null
+          geo_endereco?: string | null
+          geo_lat?: number | null
+          geo_lng?: number | null
           id?: string
           ip?: string | null
           provider?: string | null
           reason?: string | null
+          reason_context?: string | null
+          ref_id?: string | null
+          ref_table?: string | null
           success?: boolean
           user_agent?: string | null
           user_id?: string | null
