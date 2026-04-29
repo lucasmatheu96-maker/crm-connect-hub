@@ -12,10 +12,11 @@ import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Package, Search, Pencil, Trash2 } from "lucide-react";
+import { Plus, Package, Search, Pencil, Trash2, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { fmtMoney } from "@/lib/format";
 import { offlineInsert, offlineUpdate, offlineDelete } from "@/lib/offlineWrite";
+import { DetailsDialog } from "@/components/DetailsDialog";
 
 const schema = z.object({
   nome: z.string().trim().min(2).max(120),
@@ -37,6 +38,7 @@ export default function Produtos() {
   const [search, setSearch] = useState("");
   const [form, setForm] = useState<any>({ ativo: true, preco: 0, estoque: 0 });
   const [busy, setBusy] = useState(false);
+  const [viewing, setViewing] = useState<any>(null);
 
   useEffect(() => { load(); }, []);
   const load = async () => {
@@ -92,8 +94,8 @@ export default function Produtos() {
               <Card key={p.id} className="p-4 hover:shadow-elevated transition-shadow min-w-0">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
-                    <div className="font-medium break-words">{p.nome}</div>
-                    <div className="text-xs text-muted-foreground mt-0.5 break-words">
+                    <div className="font-medium truncate" title={p.nome}>{p.nome}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5 truncate">
                       {p.sku || "—"}{p.categoria ? ` · ${p.categoria}` : ""}
                     </div>
                   </div>
@@ -115,12 +117,15 @@ export default function Produtos() {
                     <div className={`text-base sm:text-lg font-semibold ${(p.disponivel ?? p.estoque) < 0 ? "text-destructive" : ""}`}>{p.disponivel ?? p.estoque}</div>
                   </div>
                 </div>
-                {isAdmin && (
-                  <div className="mt-3 flex justify-end gap-1 border-t pt-2">
-                    <Button size="sm" variant="ghost" onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /></Button>
-                    <Button size="sm" variant="ghost" onClick={() => remove(p.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                  </div>
-                )}
+                <div className="mt-3 flex justify-end gap-1 border-t pt-2">
+                  <Button size="sm" variant="ghost" title="Ver detalhes" onClick={() => setViewing(p)}><Eye className="h-4 w-4" /></Button>
+                  {isAdmin && (
+                    <>
+                      <Button size="sm" variant="ghost" onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /></Button>
+                      <Button size="sm" variant="ghost" onClick={() => remove(p.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                    </>
+                  )}
+                </div>
               </Card>
             ))}
           </div>
