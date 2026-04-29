@@ -104,6 +104,41 @@ export default function Pedidos() {
     if (error) toast.error(error.message); else { toast.success("Excluído"); load(); }
   };
 
+  const revertToOrcamento = async (p: any) => {
+    if (!confirm(`Reverter pedido #${p.numero} para orçamento?`)) return;
+    // Cria orçamento espelho
+    const { data: orc, error: errOrc } = await supabase.from("orcamentos").insert({
+      cliente_id: p.cliente_id,
+      owner_id: p.owner_id,
+      status: "rascunho",
+      desconto: p.desconto || 0,
+      total: p.total || 0,
+      observacoes: p.observacoes || null,
+    }).select("id, numero").single();
+    if (errOrc || !orc) { toast.error(errOrc?.message || "Falha ao criar orçamento"); return; }
+
+    // Copia itens
+    const { data: itensPed } = await supabase.from("pedido_itens").select("*").eq("pedido_id", p.id);
+    if (itensPed && itensPed.length > 0) {
+      const novos = itensPed.map((i: any) => ({
+        orcamento_id: orc.id,
+        produto_id: i.produto_id,
+        descricao: i.descricao,
+        quantidade: i.quantidade,
+        preco_unitario: i.preco_unitario,
+        subtotal: i.subtotal,
+      }));
+      await supabase.from("orcamento_itens").insert(novos);
+    }
+
+    // Remove pedido original
+    const { error: errDel } = await supabase.from("pedidos").delete().eq("id", p.id);
+    if (errDel) { toast.error("Orçamento criado, mas falhou ao remover pedido: " + errDel.message); return; }
+
+    toast.success(`Pedido revertido para orçamento #${orc.numero}`);
+    load();
+  };
+
   return (
     <div>
       <PageHeader title="Pedidos" description="Acompanhamento de vendas e entregas" />
