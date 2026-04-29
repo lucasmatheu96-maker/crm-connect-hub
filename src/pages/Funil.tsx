@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, MoreVertical, MapPin } from "lucide-react";
+import { Plus, Pencil, Trash2, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { fmtMoney } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -33,6 +33,7 @@ export default function Funil() {
   const [items, setItems] = useState<any[]>([]);
   const [clientes, setClientes] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<any>(null);
   const [form, setForm] = useState<any>({ estagio: "lead", probabilidade: 20, valor: 0 });
   const [busy, setBusy] = useState(false);
   const [dragId, setDragId] = useState<string | null>(null);
@@ -46,23 +47,44 @@ export default function Funil() {
     setItems(ops || []); setClientes(cls || []);
   };
 
-  const openNew = () => { setForm({ estagio: "lead", probabilidade: 20, valor: 0 }); setOpen(true); };
+  const openNew = () => { setEditing(null); setForm({ estagio: "lead", probabilidade: 20, valor: 0 }); setOpen(true); };
+  const openEdit = (it: any) => {
+    setEditing(it);
+    setForm({
+      titulo: it.titulo,
+      descricao: it.descricao,
+      cliente_id: it.cliente_id,
+      valor: it.valor,
+      estagio: it.estagio,
+      probabilidade: it.probabilidade,
+      data_fechamento_prevista: it.data_fechamento_prevista,
+    });
+    setOpen(true);
+  };
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.titulo) { toast.error("Informe um título"); return; }
     setBusy(true);
-    const geo = await captureLocation();
-    const { error } = await supabase.from("oportunidades").insert({
-      titulo: form.titulo, descricao: form.descricao || null,
-      cliente_id: form.cliente_id || null, valor: Number(form.valor || 0),
-      estagio: form.estagio, probabilidade: Number(form.probabilidade || 20),
+    const payload: any = {
+      titulo: form.titulo,
+      descricao: form.descricao || null,
+      cliente_id: form.cliente_id || null,
+      valor: Number(form.valor || 0),
+      estagio: form.estagio,
+      probabilidade: Number(form.probabilidade || 20),
       data_fechamento_prevista: form.data_fechamento_prevista || null,
-      owner_id: user!.id, ...geo,
-    });
+    };
+    let error: any = null;
+    if (editing) {
+      ({ error } = await supabase.from("oportunidades").update(payload).eq("id", editing.id));
+    } else {
+      const geo = await captureLocation();
+      ({ error } = await supabase.from("oportunidades").insert({ ...payload, owner_id: user!.id, ...geo }));
+    }
     setBusy(false);
     if (error) toast.error(error.message);
-    else { toast.success("Oportunidade criada"); setOpen(false); load(); }
+    else { toast.success(editing ? "Oportunidade atualizada" : "Oportunidade criada"); setOpen(false); load(); }
   };
 
   const moveTo = async (id: string, stage: Stage) => {
@@ -112,8 +134,11 @@ export default function Funil() {
                     className="p-3 shadow-soft cursor-grab active:cursor-grabbing hover:shadow-elevated transition-shadow"
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <div className="text-sm font-semibold leading-tight">{it.titulo}</div>
-                      <button onClick={() => remove(it.id)} className="text-muted-foreground hover:text-destructive"><MoreVertical className="h-4 w-4" /></button>
+                      <div className="text-sm font-semibold leading-tight flex-1 min-w-0">{it.titulo}</div>
+                      <div className="flex gap-0.5 shrink-0">
+                        <button type="button" onClick={(e) => { e.stopPropagation(); openEdit(it); }} className="text-muted-foreground hover:text-primary p-0.5" title="Editar"><Pencil className="h-3.5 w-3.5" /></button>
+                        <button type="button" onClick={(e) => { e.stopPropagation(); remove(it.id); }} className="text-muted-foreground hover:text-destructive p-0.5" title="Excluir"><Trash2 className="h-3.5 w-3.5" /></button>
+                      </div>
                     </div>
                     {it.clientes?.nome && <div className="text-xs text-muted-foreground mt-1">{it.clientes.nome}</div>}
                     <div className="mt-2 flex items-center justify-between">
@@ -136,7 +161,7 @@ export default function Funil() {
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Nova oportunidade</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{editing ? "Editar oportunidade" : "Nova oportunidade"}</DialogTitle></DialogHeader>
           <form onSubmit={save} className="grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2 space-y-2"><Label>Título *</Label><Input value={form.titulo || ""} onChange={(e) => setForm({ ...form, titulo: e.target.value })} required maxLength={200} /></div>
             <div className="sm:col-span-2 space-y-2">
@@ -165,7 +190,7 @@ export default function Funil() {
             <div className="sm:col-span-2 space-y-2"><Label>Descrição</Label><Textarea value={form.descricao || ""} onChange={(e) => setForm({ ...form, descricao: e.target.value })} maxLength={2000} rows={3} /></div>
             <DialogFooter className="sm:col-span-2">
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-              <Button type="submit" variant="brand" disabled={busy}>{busy ? "Salvando..." : "Criar"}</Button>
+              <Button type="submit" variant="brand" disabled={busy}>{busy ? "Salvando..." : (editing ? "Atualizar" : "Criar")}</Button>
             </DialogFooter>
           </form>
         </DialogContent>

@@ -143,8 +143,8 @@ export default function Pedidos() {
                   </div>
                   <div className="text-right text-xs text-muted-foreground">
                     {fmtDate(p.created_at)}
-                    {isAdmin && p.geo_lat && (
-                      <a href={`https://www.google.com/maps?q=${p.geo_lat},${p.geo_lng}`} target="_blank" rel="noreferrer" className="ml-2 inline-flex">
+                    {isAdmin && p.geo_lat && p.geo_lng && (
+                      <a href={`https://www.google.com/maps?q=${p.geo_lat},${p.geo_lng}`} target="_blank" rel="noreferrer" className="ml-2 inline-flex" title="Ver no mapa">
                         <MapPin className="h-3 w-3 text-primary" />
                       </a>
                     )}
