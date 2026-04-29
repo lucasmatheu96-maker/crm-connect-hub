@@ -270,10 +270,16 @@ export default function Orcamentos() {
                 </Select>
               </div>
               <div className="space-y-2"><Label>Validade</Label><Input type="date" value={form.validade || ""} onChange={(e) => setForm({ ...form, validade: e.target.value })} /></div>
-              <div className="space-y-2"><Label>Desconto (R$)</Label><Input type="number" step="0.01" min="0" value={form.desconto || 0} onChange={(e) => setForm({ ...form, desconto: e.target.value })} /></div>
+              <div className="space-y-2"><Label>Desconto (%)</Label><Input type="number" step="0.01" min="0" max="100" value={form.desconto_pct ?? 0} onChange={(e) => setForm({ ...form, desconto_pct: e.target.value })} /></div>
             </div>
 
             <ItensEditor itens={itens} onChange={setItens} />
+
+            <div className="rounded-lg border bg-muted/30 p-3 grid grid-cols-3 gap-2 text-xs">
+              <div><div className="text-muted-foreground">Subtotal</div><div className="font-semibold">{fmtMoney(subtotalAtual)}</div></div>
+              <div><div className="text-muted-foreground">Desconto ({descontoPctNum}%)</div><div className="font-semibold text-destructive">- {fmtMoney(descontoValor)}</div></div>
+              <div><div className="text-muted-foreground">Total final</div><div className="font-bold text-primary text-base">{fmtMoney(totalCalculado)}</div></div>
+            </div>
 
             {!editing && isAdmin && <div className="flex items-start gap-2 rounded-lg bg-accent-soft p-3 text-xs text-accent"><MapPin className="h-4 w-4 shrink-0 mt-0.5" /><span>Localização atual será capturada ao salvar.</span></div>}
 
