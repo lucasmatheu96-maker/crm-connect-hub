@@ -110,7 +110,7 @@ export default function Orcamentos() {
         await offlineDelete("orcamento_itens", { column: "orcamento_id", value: editing.id });
       }
     } else {
-      const geo = await captureLocation(getClienteFallbackAddress(form.cliente_id));
+      const geo = await captureLocation(getClienteFallbackAddress(form.cliente_id), { reason: "cadastro_orcamento" });
       // gera UUID local para permitir vincular itens mesmo offline
       orcamentoId = (typeof crypto !== "undefined" && (crypto as any).randomUUID)
         ? (crypto as any).randomUUID()
@@ -152,7 +152,7 @@ export default function Orcamentos() {
     }
     if (!confirm(`Converter orçamento #${o.numero} em pedido?`)) return;
     const { data: itensData } = await supabase.from("orcamento_itens").select("*").eq("orcamento_id", o.id);
-    const geo = await captureLocation(getClienteFallbackAddress(o.cliente_id));
+    const geo = await captureLocation(getClienteFallbackAddress(o.cliente_id), { reason: "conversao_pedido", refTable: "orcamentos", refId: o.id });
     const { data: ped, error } = await supabase.from("pedidos").insert({
       cliente_id: o.cliente_id, orcamento_id: o.id, owner_id: user!.id,
       desconto: o.desconto, total: o.total, observacoes: o.observacoes,

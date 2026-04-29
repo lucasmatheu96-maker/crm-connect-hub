@@ -79,7 +79,7 @@ export default function Funil() {
     if (editing) {
       ({ error } = await supabase.from("oportunidades").update(payload).eq("id", editing.id));
     } else {
-      const geo = await captureLocation();
+      const geo = await captureLocation(null, { reason: "cadastro_oportunidade" });
       ({ error } = await supabase.from("oportunidades").insert({ ...payload, owner_id: user!.id, ...geo }));
     }
     setBusy(false);

@@ -83,7 +83,7 @@ export default function Clientes() {
       let geo = { geo_lat: null, geo_lng: null, geo_endereco: null } as Awaited<ReturnType<typeof captureLocation>>;
       try {
         geo = await Promise.race([
-          captureLocation(fallback),
+          captureLocation(fallback, { reason: "cadastro_cliente" }),
           new Promise<typeof geo>((resolve) => setTimeout(() => resolve(geo), 12000)),
         ]);
       } catch { /* segue sem geo */ }
