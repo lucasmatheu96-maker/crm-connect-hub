@@ -368,6 +368,8 @@ export type Database = {
           desconto: number
           empresa_cadastro: string | null
           finalidade: string | null
+          forma_pagamento: string | null
+          frete: string | null
           geo_endereco: string | null
           geo_lat: number | null
           geo_lng: number | null
@@ -376,6 +378,7 @@ export type Database = {
           numero: number
           observacoes: string | null
           owner_id: string
+          prazo_entrega: string | null
           prioridade: string | null
           responsavel_documento: string | null
           source: string
@@ -394,6 +397,8 @@ export type Database = {
           desconto?: number
           empresa_cadastro?: string | null
           finalidade?: string | null
+          forma_pagamento?: string | null
+          frete?: string | null
           geo_endereco?: string | null
           geo_lat?: number | null
           geo_lng?: number | null
@@ -402,6 +407,7 @@ export type Database = {
           numero?: number
           observacoes?: string | null
           owner_id: string
+          prazo_entrega?: string | null
           prioridade?: string | null
           responsavel_documento?: string | null
           source?: string
@@ -420,6 +426,8 @@ export type Database = {
           desconto?: number
           empresa_cadastro?: string | null
           finalidade?: string | null
+          forma_pagamento?: string | null
+          frete?: string | null
           geo_endereco?: string | null
           geo_lat?: number | null
           geo_lng?: number | null
@@ -428,6 +436,7 @@ export type Database = {
           numero?: number
           observacoes?: string | null
           owner_id?: string
+          prazo_entrega?: string | null
           prioridade?: string | null
           responsavel_documento?: string | null
           source?: string
@@ -505,6 +514,8 @@ export type Database = {
           desconto: number
           empresa_cadastro: string | null
           finalidade: string | null
+          forma_pagamento: string | null
+          frete: string | null
           geo_endereco: string | null
           geo_lat: number | null
           geo_lng: number | null
@@ -514,6 +525,7 @@ export type Database = {
           observacoes: string | null
           orcamento_id: string | null
           owner_id: string
+          prazo_entrega: string | null
           prioridade: string | null
           responsavel_documento: string | null
           source: string
@@ -531,6 +543,8 @@ export type Database = {
           desconto?: number
           empresa_cadastro?: string | null
           finalidade?: string | null
+          forma_pagamento?: string | null
+          frete?: string | null
           geo_endereco?: string | null
           geo_lat?: number | null
           geo_lng?: number | null
@@ -540,6 +554,7 @@ export type Database = {
           observacoes?: string | null
           orcamento_id?: string | null
           owner_id: string
+          prazo_entrega?: string | null
           prioridade?: string | null
           responsavel_documento?: string | null
           source?: string
@@ -557,6 +572,8 @@ export type Database = {
           desconto?: number
           empresa_cadastro?: string | null
           finalidade?: string | null
+          forma_pagamento?: string | null
+          frete?: string | null
           geo_endereco?: string | null
           geo_lat?: number | null
           geo_lng?: number | null
@@ -566,6 +583,7 @@ export type Database = {
           observacoes?: string | null
           orcamento_id?: string | null
           owner_id?: string
+          prazo_entrega?: string | null
           prioridade?: string | null
           responsavel_documento?: string | null
           source?: string
