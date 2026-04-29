@@ -165,7 +165,7 @@ export default function Dashboard() {
                       <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-gradient text-[11px] font-bold text-primary-foreground">
                         {i + 1}
                       </span>
-                      <span className="truncate text-sm font-medium min-w-0 flex-1">{r.nome}</span>
+                      <span className="truncate text-sm font-medium min-w-0 flex-1">{abreviar(r.nome, 15)}</span>
                     </div>
                     <span className="text-sm font-semibold text-primary shrink-0">{fmtMoney(r.total)}</span>
                   </button>
