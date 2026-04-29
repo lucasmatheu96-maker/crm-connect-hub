@@ -107,6 +107,9 @@ export default function Orcamentos() {
       desconto: Number(descontoValor.toFixed(2)),
       total: Number(totalCalculado.toFixed(2)),
       observacoes: form.observacoes || null,
+      forma_pagamento: form.forma_pagamento || null,
+      prazo_entrega: form.prazo_entrega || null,
+      frete: form.frete || null,
       owner_id: user!.id,
     };
 
@@ -208,7 +211,9 @@ export default function Orcamentos() {
         total: o.total,
         observacoes: o.observacoes,
         vendedorNome: o._vendedorNome,
-        geo_endereco: o.geo_endereco,
+        forma_pagamento: o.forma_pagamento,
+        prazo_entrega: o.prazo_entrega,
+        frete: o.frete,
         cliente: clienteData,
         itens: (itensData || []).map((i: any) => ({
           descricao: i.descricao, quantidade: Number(i.quantidade),
