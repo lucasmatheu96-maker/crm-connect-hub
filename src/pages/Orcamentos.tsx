@@ -298,6 +298,35 @@ export default function Orcamentos() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <DetailsDialog
+        open={!!viewing}
+        onOpenChange={(v) => { if (!v) { setViewing(null); setViewItens([]); } }}
+        title={viewing ? `Orçamento #${viewing.numero}` : "Orçamento"}
+        rows={viewing ? [
+          { label: "Cliente", value: viewing.clientes?.nome },
+          { label: "Vendedor", value: viewing._vendedorNome },
+          { label: "Status", value: viewing.status },
+          { label: "Validade", value: viewing.validade ? fmtDate(viewing.validade) : "—" },
+          { label: "Desconto", value: fmtMoney(viewing.desconto || 0) },
+          { label: "Total", value: fmtMoney(viewing.total || 0) },
+          { label: "Criado em", value: fmtDate(viewing.created_at) },
+          { label: "Observações", value: viewing.observacoes },
+        ] : []}
+        extra={viewItens.length > 0 && (
+          <div>
+            <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">Itens</div>
+            <div className="space-y-1">
+              {viewItens.map((i: any) => (
+                <div key={i.id} className="flex items-center justify-between text-sm border-b py-1">
+                  <span className="truncate">{i.descricao}</span>
+                  <span className="text-muted-foreground shrink-0 ml-2">{i.quantidade} × {fmtMoney(i.preco_unitario)} = <strong>{fmtMoney(i.subtotal)}</strong></span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      />
     </div>
   );
 }
