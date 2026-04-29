@@ -21,7 +21,7 @@ export function ItensEditor({
   const [produtos, setProdutos] = useState<any[]>([]);
 
   useEffect(() => {
-    supabase.from("produtos").select("id, nome, sku, preco").eq("ativo", true).order("nome").then(({ data }) => setProdutos(data || []));
+    supabase.from("produtos").select("id, nome, sku, preco, unidade").eq("ativo", true).order("nome").then(({ data }) => setProdutos(data || []));
   }, []);
 
   const addItem = () => onChange([...itens, { descricao: "", quantidade: 1, preco_unitario: 0, produto_id: null }]);
@@ -33,6 +33,8 @@ export function ItensEditor({
     const p = produtos.find((x) => x.id === pid);
     if (p) update(i, { produto_id: pid, descricao: p.nome, preco_unitario: Number(p.preco) });
   };
+
+  const getUnidade = (pid?: string | null) => produtos.find((p) => p.id === pid)?.unidade || "";
 
   const total = itens.reduce((s, it) => s + Number(it.quantidade) * Number(it.preco_unitario), 0);
 
@@ -57,7 +59,7 @@ export function ItensEditor({
                 triggerClassName="h-9 text-xs"
               />
             </div>
-            <Input className="col-span-6 sm:col-span-3 h-9 text-xs" placeholder="Descrição" value={it.descricao} onChange={(e) => update(i, { descricao: e.target.value })} />
+            <Input className="col-span-6 sm:col-span-3 h-9 text-xs bg-muted" placeholder="Unidade" value={getUnidade(it.produto_id)} disabled readOnly />
             <Input className="col-span-3 sm:col-span-1 h-9 text-xs" type="number" min="0" step="0.01" value={it.quantidade} onChange={(e) => update(i, { quantidade: Number(e.target.value) })} />
             <Input className="col-span-3 sm:col-span-2 h-9 text-xs" type="number" min="0" step="0.01" value={it.preco_unitario} onChange={(e) => update(i, { preco_unitario: Number(e.target.value) })} />
             <div className="col-span-9 sm:col-span-1 text-right text-xs font-semibold self-center">{fmtMoney(it.quantidade * it.preco_unitario)}</div>
