@@ -133,7 +133,7 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
       </aside>
 
       {/* Main */}
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col pb-[64px] md:pb-0">
         <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b bg-background/85 px-4 backdrop-blur md:px-8">
           <div className="flex items-center gap-3">
             <div className="md:hidden">
@@ -173,8 +173,8 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
 
         <main className="flex-1 overflow-x-hidden p-4 md:p-8">{children}</main>
 
-        {/* Mobile bottom nav */}
-        <nav className="sticky bottom-0 z-20 flex overflow-x-auto overflow-y-hidden border-t bg-background md:hidden">
+        {/* Mobile bottom nav — fixed so it never moves with page scroll */}
+        <nav className="fixed inset-x-0 bottom-0 z-30 flex overflow-x-auto overflow-y-hidden border-t bg-background md:hidden">
           {[
             ...nav,
             ...(role === "admin"
