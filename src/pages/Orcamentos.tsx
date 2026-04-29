@@ -110,8 +110,6 @@ export default function Orcamentos() {
         await offlineDelete("orcamento_itens", { column: "orcamento_id", value: editing.id });
       }
     } else {
-      const onlineNow = navigator.onLine;
-      if (onlineNow) toast.info("Capturando localização...");
       const geo = await captureLocation(getClienteFallbackAddress(form.cliente_id));
       // gera UUID local para permitir vincular itens mesmo offline
       orcamentoId = (typeof crypto !== "undefined" && (crypto as any).randomUUID)

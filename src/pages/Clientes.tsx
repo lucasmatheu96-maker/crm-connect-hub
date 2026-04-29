@@ -90,7 +90,6 @@ export default function Clientes() {
       const { error, pending } = await offlineInsert("clientes", { ...payload, ...geo });
       if (error) { toast.error(error.message); setBusy(false); return; }
       if (pending) { /* já houve toast */ }
-      else if (geo.geo_lat) toast.success("Cliente cadastrado com sucesso ✓ Localização capturada.");
       else toast.success("Cliente cadastrado com sucesso ✓");
     }
     setBusy(false); setOpen(false); load();
