@@ -42,22 +42,18 @@ async function forwardGeocode(address: string): Promise<GeoCapture> {
 }
 
 /**
- * Tenta capturar a localização do usuário via GPS do navegador.
- * Se falhar (negado / sem suporte / timeout) e um endereço de fallback for informado,
- * faz geocoding direto do endereço para obter coordenadas + endereço completo.
+ * Captura SOMENTE a localização atual via GPS do navegador.
+ * Se o GPS falhar (negado / sem suporte / timeout), retorna nulls — NUNCA usa
+ * endereço de fallback do cliente, pois o objetivo é registrar onde o usuário
+ * realmente estava no momento de salvar.
  *
- * Sempre retorna um objeto seguro (com nulls se não houver nenhuma informação).
+ * O parâmetro fallbackAddress é mantido por compatibilidade mas é ignorado.
  */
-export async function captureLocation(fallbackAddress?: string | null): Promise<GeoCapture> {
+export async function captureLocation(_fallbackAddress?: string | null): Promise<GeoCapture> {
   const empty: GeoCapture = { geo_lat: null, geo_lng: null, geo_endereco: null };
 
-  const tryFallback = async (): Promise<GeoCapture> => {
-    if (!fallbackAddress || !fallbackAddress.trim()) return empty;
-    return await forwardGeocode(fallbackAddress.trim());
-  };
-
   if (typeof navigator === "undefined" || !navigator.geolocation) {
-    return await tryFallback();
+    return empty;
   }
 
   const position = await new Promise<GeolocationPosition | null>((resolve) => {
@@ -65,26 +61,22 @@ export async function captureLocation(fallbackAddress?: string | null): Promise<
       navigator.geolocation.getCurrentPosition(
         (pos) => resolve(pos),
         () => resolve(null),
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
       );
     } catch {
       resolve(null);
     }
   });
 
-  if (!position) {
-    // GPS negado / indisponível → tenta pelo endereço digitado
-    return await tryFallback();
-  }
+  if (!position) return empty;
 
   const lat = position.coords.latitude;
   const lng = position.coords.longitude;
   const endereco = await reverseGeocode(lat, lng);
-  const fallbackText = fallbackAddress?.trim() || `Lat ${lat.toFixed(6)}, Lng ${lng.toFixed(6)}`;
 
   return {
     geo_lat: lat,
     geo_lng: lng,
-    geo_endereco: endereco ?? fallbackText,
+    geo_endereco: endereco ?? `Lat ${lat.toFixed(6)}, Lng ${lng.toFixed(6)}`,
   };
 }
