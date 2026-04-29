@@ -11,12 +11,13 @@ import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ShoppingCart, Pencil, Trash2, MapPin, Undo2 } from "lucide-react";
+import { ShoppingCart, Pencil, Trash2, MapPin, Undo2, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { fmtMoney, fmtDate } from "@/lib/format";
 import { ItensEditor, Item } from "@/components/ItensEditor";
 import { offlineUpdate, offlineDelete } from "@/lib/offlineWrite";
 import { SearchableSelect } from "@/components/SearchableSelect";
+import { DetailsDialog } from "@/components/DetailsDialog";
 
 const STATUSES = ["novo","confirmado","em_separacao","faturado","enviado","entregue","cancelado"] as const;
 const statusColor: Record<string, string> = {
@@ -42,6 +43,14 @@ export default function Pedidos() {
   const [form, setForm] = useState<any>({ status: "novo", desconto: 0 });
   const [itens, setItens] = useState<Item[]>([]);
   const [busy, setBusy] = useState(false);
+  const [viewing, setViewing] = useState<any>(null);
+  const [viewItens, setViewItens] = useState<any[]>([]);
+
+  const openView = async (p: any) => {
+    setViewing(p);
+    const { data } = await supabase.from("pedido_itens").select("*").eq("pedido_id", p.id);
+    setViewItens(data || []);
+  };
 
   useEffect(() => { load(); }, []);
   const load = async () => {
@@ -186,6 +195,7 @@ export default function Pedidos() {
                   </div>
                 </div>
                 <div className="mt-3 flex justify-end gap-1 border-t pt-2">
+                  <Button size="sm" variant="ghost" title="Ver detalhes" onClick={() => openView(p)}><Eye className="h-4 w-4" /></Button>
                   <Button size="sm" variant="ghost" onClick={() => revertToOrcamento(p)} title="Reverter para orçamento">
                     <Undo2 className="h-4 w-4" />
                   </Button>
