@@ -43,6 +43,7 @@ interface AuthorizedEmail {
   created_at: string;
   activated_at: string | null;
   activated_user_id: string | null;
+  track_location: boolean;
 }
 
 interface AccessLog {
