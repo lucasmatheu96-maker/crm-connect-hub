@@ -12,13 +12,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, FileText, Pencil, Trash2, MapPin, ArrowRight } from "lucide-react";
+import { Plus, FileText, Pencil, Trash2, MapPin, ArrowRight, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { fmtMoney, fmtDate } from "@/lib/format";
 import { ItensEditor, Item } from "@/components/ItensEditor";
 import { openMapLocation } from "@/lib/maps";
 import { offlineInsert, offlineUpdate, offlineDelete } from "@/lib/offlineWrite";
 import { SearchableSelect } from "@/components/SearchableSelect";
+import { DetailsDialog } from "@/components/DetailsDialog";
 
 const STATUSES = ["rascunho","enviado","aprovado","rejeitado","expirado"] as const;
 const statusColor: Record<string, string> = {
@@ -42,6 +43,14 @@ export default function Orcamentos() {
   const [form, setForm] = useState<any>({ status: "rascunho", desconto: 0 });
   const [itens, setItens] = useState<Item[]>([]);
   const [busy, setBusy] = useState(false);
+  const [viewing, setViewing] = useState<any>(null);
+  const [viewItens, setViewItens] = useState<any[]>([]);
+
+  const openView = async (o: any) => {
+    setViewing(o);
+    const { data } = await supabase.from("orcamento_itens").select("*").eq("orcamento_id", o.id);
+    setViewItens(data || []);
+  };
 
   useEffect(() => { load(); }, []);
 
@@ -227,6 +236,7 @@ export default function Orcamentos() {
                     ) : <span className="text-xs text-muted-foreground">Sem GPS</span>
                   ) : <span />}
                   <div className="flex gap-0.5">
+                    <Button size="sm" variant="ghost" title="Ver detalhes" onClick={() => openView(o)}><Eye className="h-4 w-4" /></Button>
                     {o._temPedido ? (
                       <Badge variant="secondary" className="text-[10px]" title="Pedido já gerado para este orçamento">Pedido gerado</Badge>
                     ) : (
@@ -288,6 +298,35 @@ export default function Orcamentos() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <DetailsDialog
+        open={!!viewing}
+        onOpenChange={(v) => { if (!v) { setViewing(null); setViewItens([]); } }}
+        title={viewing ? `Orçamento #${viewing.numero}` : "Orçamento"}
+        rows={viewing ? [
+          { label: "Cliente", value: viewing.clientes?.nome },
+          { label: "Vendedor", value: viewing._vendedorNome },
+          { label: "Status", value: viewing.status },
+          { label: "Validade", value: viewing.validade ? fmtDate(viewing.validade) : "—" },
+          { label: "Desconto", value: fmtMoney(viewing.desconto || 0) },
+          { label: "Total", value: fmtMoney(viewing.total || 0) },
+          { label: "Criado em", value: fmtDate(viewing.created_at) },
+          { label: "Observações", value: viewing.observacoes },
+        ] : []}
+        extra={viewItens.length > 0 && (
+          <div>
+            <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">Itens</div>
+            <div className="space-y-1">
+              {viewItens.map((i: any) => (
+                <div key={i.id} className="flex items-center justify-between text-sm border-b py-1">
+                  <span className="truncate">{i.descricao}</span>
+                  <span className="text-muted-foreground shrink-0 ml-2">{i.quantidade} × {fmtMoney(i.preco_unitario)} = <strong>{fmtMoney(i.subtotal)}</strong></span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      />
     </div>
   );
 }
