@@ -207,8 +207,8 @@ export default function Orcamentos() {
           : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {listFiltrada.map((o) => (
-              <Card key={o.id} className="p-4 hover:shadow-elevated transition-shadow min-w-0">
-                <div className="flex items-start justify-between gap-2">
+              <Card key={o.id} className="p-4 hover:shadow-elevated transition-shadow min-w-0 overflow-hidden">
+                <div className="flex items-start justify-between gap-2 min-w-0">
                   <div className="min-w-0 flex-1">
                     <div className="font-mono text-xs text-muted-foreground">#{o.numero}</div>
                     <div className="font-medium truncate" title={o.clientes?.nome || "—"}>{o.clientes?.nome || "—"}</div>
@@ -216,29 +216,31 @@ export default function Orcamentos() {
                   </div>
                   <Badge className={`${statusColor[o.status]} shrink-0`}>{o.status}</Badge>
                 </div>
-                <div className="mt-3 flex items-end justify-between gap-2">
-                  <div>
+                <div className="mt-3 flex items-end justify-between gap-2 min-w-0">
+                  <div className="min-w-0">
                     <div className="text-[10px] uppercase text-muted-foreground tracking-wide">Total</div>
-                    <div className="text-lg font-semibold">{fmtMoney(o.total)}</div>
+                    <div className="text-lg font-semibold truncate">{fmtMoney(o.total)}</div>
                   </div>
-                  <div className="text-right text-xs text-muted-foreground">
+                  <div className="text-right text-xs text-muted-foreground shrink-0">
                     {o.validade && <div>Val.: {fmtDate(o.validade)}</div>}
                     <div>{fmtDate(o.created_at)}</div>
                   </div>
                 </div>
-                <div className="mt-3 flex items-center justify-between border-t pt-2">
-                  {isAdmin ? (
-                    o.geo_lat && o.geo_lng ? (
-                      <button type="button" onClick={() => handleOpenMap(o.geo_lat, o.geo_lng)}
-                        className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
-                        <MapPin className="h-3 w-3" /> Mapa
-                      </button>
-                    ) : <span className="text-xs text-muted-foreground">Sem GPS</span>
-                  ) : <span />}
-                  <div className="flex gap-0.5">
+                <div className="mt-3 flex items-center justify-between gap-2 border-t pt-2 min-w-0">
+                  <div className="min-w-0 flex-1 truncate">
+                    {isAdmin ? (
+                      o.geo_lat && o.geo_lng ? (
+                        <button type="button" onClick={() => handleOpenMap(o.geo_lat, o.geo_lng)}
+                          className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+                          <MapPin className="h-3 w-3" /> Mapa
+                        </button>
+                      ) : <span className="text-xs text-muted-foreground">Sem GPS</span>
+                    ) : null}
+                  </div>
+                  <div className="flex gap-0.5 shrink-0 items-center">
                     <Button size="sm" variant="ghost" title="Ver detalhes" onClick={() => openView(o)}><Eye className="h-4 w-4" /></Button>
                     {o._temPedido ? (
-                      <Badge variant="secondary" className="text-[10px]" title="Pedido já gerado para este orçamento">Pedido gerado</Badge>
+                      <Badge variant="secondary" className="text-[10px]" title="Pedido já gerado">Gerado</Badge>
                     ) : (
                       <Button size="sm" variant="ghost" title="Converter em pedido" onClick={() => converterEmPedido(o)}><ArrowRight className="h-4 w-4 text-success" /></Button>
                     )}

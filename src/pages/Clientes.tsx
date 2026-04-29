@@ -141,8 +141,8 @@ export default function Clientes() {
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((c) => (
-              <Card key={c.id} className="p-4 hover:shadow-elevated transition-shadow min-w-0">
-                <div className="flex items-start justify-between gap-2">
+              <Card key={c.id} className="p-4 hover:shadow-elevated transition-shadow min-w-0 overflow-hidden">
+                <div className="flex items-start justify-between gap-2 min-w-0">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 min-w-0">
                       {c.codigo_externo && <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground shrink-0">#{c.codigo_externo}</span>}
@@ -150,31 +150,27 @@ export default function Clientes() {
                     </div>
                     {c.empresa && <div className="text-xs text-muted-foreground truncate mt-0.5" title={c.empresa}>{c.empresa}</div>}
                   </div>
+                </div>
+                <div className="mt-2 space-y-1 text-xs text-muted-foreground min-w-0">
+                  {c.email && <div className="truncate" title={c.email}>{c.email}</div>}
+                  {c.telefone && <div className="truncate">{c.telefone}</div>}
+                  {(c.cidade || c.estado) && <div className="truncate">{[c.cidade, c.estado].filter(Boolean).join(" / ")}</div>}
+                </div>
+                <div className="mt-3 flex items-center justify-between gap-2 border-t pt-2 text-xs min-w-0">
+                  <div className="min-w-0 flex-1 truncate">
+                    {isAdmin && c.geo_lat && c.geo_lng ? (
+                      <button type="button" onClick={() => handleOpenMap(c.geo_lat!, c.geo_lng!)}
+                        className="inline-flex items-center gap-1 text-primary hover:underline">
+                        <MapPin className="h-3 w-3" /> Mapa
+                      </button>
+                    ) : isAdmin ? <span className="text-muted-foreground">Sem GPS</span> : <span className="text-muted-foreground">{fmtDate(c.created_at)}</span>}
+                  </div>
                   <div className="flex gap-0.5 shrink-0">
                     <Button size="sm" variant="ghost" title="Ver detalhes" onClick={() => setViewing(c)}><Eye className="h-4 w-4" /></Button>
                     <Button size="sm" variant="ghost" onClick={() => openEdit(c)}><Pencil className="h-4 w-4" /></Button>
                     <Button size="sm" variant="ghost" onClick={() => remove(c.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                   </div>
                 </div>
-                <div className="mt-2 space-y-1 text-xs text-muted-foreground">
-                  {c.email && <div className="truncate">{c.email}</div>}
-                  {c.telefone && <div>{c.telefone}</div>}
-                  {(c.cidade || c.estado) && <div>{[c.cidade, c.estado].filter(Boolean).join(" / ")}</div>}
-                </div>
-                {isAdmin && (
-                  <div className="mt-3 flex items-center justify-between border-t pt-2 text-xs">
-                    {c.geo_lat && c.geo_lng ? (
-                      <button type="button" onClick={() => handleOpenMap(c.geo_lat!, c.geo_lng!)}
-                        className="inline-flex items-center gap-1 text-primary hover:underline">
-                        <MapPin className="h-3 w-3" /> Ver mapa <ExternalLink className="h-3 w-3" />
-                      </button>
-                    ) : <span className="text-muted-foreground">Sem GPS</span>}
-                    <span className="text-muted-foreground">{fmtDate(c.created_at)}</span>
-                  </div>
-                )}
-                {!isAdmin && (
-                  <div className="mt-3 border-t pt-2 text-right text-xs text-muted-foreground">{fmtDate(c.created_at)}</div>
-                )}
               </Card>
             ))}
           </div>
