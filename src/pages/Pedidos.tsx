@@ -171,8 +171,8 @@ export default function Pedidos() {
           : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {listFiltrada.map((p) => (
-              <Card key={p.id} className="p-4 hover:shadow-elevated transition-shadow min-w-0">
-                <div className="flex items-start justify-between gap-2">
+              <Card key={p.id} className="p-4 hover:shadow-elevated transition-shadow min-w-0 overflow-hidden">
+                <div className="flex items-start justify-between gap-2 min-w-0">
                   <div className="min-w-0 flex-1">
                     <div className="font-mono text-xs text-muted-foreground">#{p.numero}</div>
                     <div className="font-medium truncate" title={p.clientes?.nome || "—"}>{p.clientes?.nome || "—"}</div>
@@ -180,21 +180,21 @@ export default function Pedidos() {
                   </div>
                   <Badge className={`${statusColor[p.status]} shrink-0`}>{p.status.replace("_"," ")}</Badge>
                 </div>
-                <div className="mt-3 flex items-end justify-between gap-2">
-                  <div>
+                <div className="mt-3 flex items-end justify-between gap-2 min-w-0">
+                  <div className="min-w-0">
                     <div className="text-[10px] uppercase text-muted-foreground tracking-wide">Total</div>
-                    <div className="text-lg font-semibold">{fmtMoney(p.total)}</div>
+                    <div className="text-lg font-semibold truncate">{fmtMoney(p.total)}</div>
                   </div>
-                  <div className="text-right text-xs text-muted-foreground">
-                    {fmtDate(p.created_at)}
+                  <div className="text-right text-xs text-muted-foreground shrink-0 inline-flex items-center gap-1">
+                    <span>{fmtDate(p.created_at)}</span>
                     {isAdmin && p.geo_lat && p.geo_lng && (
-                      <a href={`https://www.google.com/maps?q=${p.geo_lat},${p.geo_lng}`} target="_blank" rel="noreferrer" className="ml-2 inline-flex" title="Ver no mapa">
+                      <a href={`https://www.google.com/maps?q=${p.geo_lat},${p.geo_lng}`} target="_blank" rel="noreferrer" className="inline-flex" title="Ver no mapa">
                         <MapPin className="h-3 w-3 text-primary" />
                       </a>
                     )}
                   </div>
                 </div>
-                <div className="mt-3 flex justify-end gap-1 border-t pt-2">
+                <div className="mt-3 flex justify-end gap-1 border-t pt-2 min-w-0">
                   <Button size="sm" variant="ghost" title="Ver detalhes" onClick={() => openView(p)}><Eye className="h-4 w-4" /></Button>
                   <Button size="sm" variant="ghost" onClick={() => revertToOrcamento(p)} title="Reverter para orçamento">
                     <Undo2 className="h-4 w-4" />
