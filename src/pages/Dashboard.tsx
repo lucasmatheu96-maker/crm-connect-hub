@@ -276,7 +276,7 @@ function DetailModal({ detail, onClose, pedidos, orcamentos, pedidoItens }: any)
                     <li key={p.id} className="py-2 flex items-center justify-between text-sm">
                       <div className="min-w-0">
                         <div className="font-mono text-xs text-muted-foreground">#{p.numero}</div>
-                        <div className="truncate">{p.clientes?.nome || "—"}</div>
+                        <div className="truncate" title={p.clientes?.nome || ""}>{abreviar(p.clientes?.nome, 15)}</div>
                       </div>
                       <div className="text-right">
                         <div className="font-semibold text-primary">{fmtMoney(p.total)}</div>
