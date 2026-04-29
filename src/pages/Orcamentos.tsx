@@ -275,6 +275,7 @@ export default function Orcamentos() {
                   </div>
                   <div className="flex gap-0.5 shrink-0 items-center">
                     <Button size="sm" variant="ghost" title="Ver detalhes" onClick={() => openView(o)}><Eye className="h-4 w-4" /></Button>
+                    <Button size="sm" variant="ghost" title="Exportar PDF" onClick={() => exportPDF(o)}><FileDown className="h-4 w-4 text-primary" /></Button>
                     {o._temPedido ? (
                       <Badge variant="secondary" className="text-[10px]" title="Pedido já gerado">Gerado</Badge>
                     ) : (
