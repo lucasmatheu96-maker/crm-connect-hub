@@ -233,7 +233,7 @@ function DetailModal({ detail, onClose, pedidos, orcamentos, pedidoItens }: any)
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 min-w-0">
-            <span className="truncate min-w-0 flex-1" title={detail?.nome}>{detail?.nome}</span>
+            <span className="truncate min-w-0 flex-1" title={detail?.nome}>{abreviar(detail?.nome, 22)}</span>
             <Badge variant="secondary" className="text-[10px] shrink-0">{detail?.mode}</Badge>
           </DialogTitle>
         </DialogHeader>
