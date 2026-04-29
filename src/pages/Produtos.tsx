@@ -89,11 +89,11 @@ export default function Produtos() {
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((p) => (
-              <Card key={p.id} className="p-4 hover:shadow-elevated transition-shadow">
+              <Card key={p.id} className="p-4 hover:shadow-elevated transition-shadow min-w-0">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
-                    <div className="font-medium truncate">{p.nome}</div>
-                    <div className="text-xs text-muted-foreground mt-0.5">
+                    <div className="font-medium break-words">{p.nome}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5 break-words">
                       {p.sku || "—"}{p.categoria ? ` · ${p.categoria}` : ""}
                     </div>
                   </div>
@@ -101,18 +101,18 @@ export default function Produtos() {
                     ? <Badge className="bg-success text-success-foreground hover:bg-success shrink-0">Ativo</Badge>
                     : <Badge variant="secondary" className="shrink-0">Inativo</Badge>}
                 </div>
-                <div className="mt-3 flex items-end justify-between gap-2">
-                  <div>
+                <div className="mt-3 flex flex-wrap items-end justify-between gap-x-3 gap-y-2">
+                  <div className="min-w-0">
                     <div className="text-[10px] uppercase text-muted-foreground tracking-wide">Preço sugerido</div>
-                    <div className="text-lg font-semibold">{fmtMoney(p.preco)}</div>
+                    <div className="text-base sm:text-lg font-semibold">{fmtMoney(p.preco)}</div>
                   </div>
-                  <div className="text-center">
+                  <div className="text-center min-w-0">
                     <div className="text-[10px] uppercase text-muted-foreground tracking-wide">Unidade</div>
-                    <div className="text-lg font-semibold">{p.unidade || "—"}</div>
+                    <div className="text-base sm:text-lg font-semibold">{p.unidade || "—"}</div>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right min-w-0">
                     <div className="text-[10px] uppercase text-muted-foreground tracking-wide">Estoque</div>
-                    <div className={`text-lg font-semibold ${(p.disponivel ?? p.estoque) < 0 ? "text-destructive" : ""}`}>{p.disponivel ?? p.estoque}</div>
+                    <div className={`text-base sm:text-lg font-semibold ${(p.disponivel ?? p.estoque) < 0 ? "text-destructive" : ""}`}>{p.disponivel ?? p.estoque}</div>
                   </div>
                 </div>
                 {isAdmin && (
