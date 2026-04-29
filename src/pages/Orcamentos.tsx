@@ -75,21 +75,23 @@ export default function Orcamentos() {
     setOpen(true);
   };
 
+  const subtotalAtual = itens.reduce((s, i) => s + Number(i.quantidade) * Number(i.preco_unitario), 0);
+  const descontoPctNum = Number(form.desconto_pct || 0);
+  const descontoValor = (subtotalAtual * descontoPctNum) / 100;
+  const totalCalculado = Math.max(0, subtotalAtual - descontoValor);
+
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.cliente_id) { toast.error("Selecione um cliente"); return; }
     if (itens.length === 0) { toast.error("Adicione ao menos um item"); return; }
     setBusy(true);
 
-    const subtotal = itens.reduce((s, i) => s + Number(i.quantidade) * Number(i.preco_unitario), 0);
-    const total = Math.max(0, subtotal - Number(form.desconto || 0));
-
     const payload: any = {
       cliente_id: form.cliente_id,
       status: form.status,
       validade: form.validade || null,
-      desconto: Number(form.desconto || 0),
-      total,
+      desconto: Number(descontoValor.toFixed(2)),
+      total: Number(totalCalculado.toFixed(2)),
       observacoes: form.observacoes || null,
       owner_id: user!.id,
     };
