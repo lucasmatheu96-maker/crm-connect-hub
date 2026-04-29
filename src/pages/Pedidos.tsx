@@ -229,6 +229,7 @@ export default function Pedidos() {
                 </div>
                 <div className="mt-3 flex justify-end gap-1 border-t pt-2 min-w-0">
                   <Button size="sm" variant="ghost" title="Ver detalhes" onClick={() => openView(p)}><Eye className="h-4 w-4" /></Button>
+                  <Button size="sm" variant="ghost" title="Exportar PDF" onClick={() => exportPDF(p)}><FileDown className="h-4 w-4 text-primary" /></Button>
                   <Button size="sm" variant="ghost" onClick={() => revertToOrcamento(p)} title="Reverter para orçamento">
                     <Undo2 className="h-4 w-4" />
                   </Button>
