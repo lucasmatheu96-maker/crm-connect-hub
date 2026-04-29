@@ -110,7 +110,7 @@ export default function Dashboard() {
         <KpiCard icon={TrendingUp} label="Vendas no mês" value={loading ? null : fmtMoney(stats!.vendasMes)} accent />
         <KpiCard icon={ShoppingCart} label="Pedidos" value={loading ? null : String(stats!.pedidos)} />
         <KpiCard icon={FileText} label="Orçamentos" value={loading ? null : String(stats!.orcamentos)} />
-        <KpiCard icon={TrendingUp} label="Taxa de conversão" value={loading ? null : `${stats!.conversao}%`} hint="Pedidos / Orçamentos" />
+        <KpiCard icon={TrendingUp} label="Taxa de conversão" value={loading ? null : `${stats!.conversao}%`} />
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
