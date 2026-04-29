@@ -211,8 +211,8 @@ export default function Orcamentos() {
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <div className="font-mono text-xs text-muted-foreground">#{o.numero}</div>
-                    <div className="font-medium truncate">{o.clientes?.nome || "—"}</div>
-                    <div className="text-xs text-muted-foreground truncate">Vend.: {o._vendedorNome}</div>
+                    <div className="font-medium truncate" title={o.clientes?.nome || "—"}>{o.clientes?.nome || "—"}</div>
+                    <div className="text-xs text-muted-foreground truncate" title={`Vend.: ${o._vendedorNome}`}>Vend.: {o._vendedorNome}</div>
                   </div>
                   <Badge className={`${statusColor[o.status]} shrink-0`}>{o.status}</Badge>
                 </div>

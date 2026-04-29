@@ -146,9 +146,9 @@ export default function Clientes() {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       {c.codigo_externo && <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground shrink-0">#{c.codigo_externo}</span>}
-                      <div className="font-medium truncate">{c.nome}</div>
+                      <div className="font-medium truncate" title={c.nome}>{c.nome}</div>
                     </div>
-                    {c.empresa && <div className="text-xs text-muted-foreground truncate mt-0.5">{c.empresa}</div>}
+                    {c.empresa && <div className="text-xs text-muted-foreground truncate mt-0.5" title={c.empresa}>{c.empresa}</div>}
                   </div>
                   <div className="flex gap-0.5 shrink-0">
                     <Button size="sm" variant="ghost" title="Ver detalhes" onClick={() => setViewing(c)}><Eye className="h-4 w-4" /></Button>
