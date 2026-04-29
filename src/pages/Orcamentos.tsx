@@ -151,7 +151,11 @@ export default function Orcamentos() {
   const remove = async (id: string) => {
     if (!confirm("Excluir orçamento?")) return;
     const { error } = await offlineDelete("orcamentos", { column: "id", value: id });
-    if (error) toast.error(error.message); else { toast.success("Excluído"); load(); }
+    if (error) toast.error(error.message);
+    else {
+      captureLocation(null, { reason: "exclusao_orcamento", refTable: "orcamentos", refId: id }).catch(() => {});
+      toast.success("Excluído"); load();
+    }
   };
 
   const converterEmPedido = async (o: any) => {
