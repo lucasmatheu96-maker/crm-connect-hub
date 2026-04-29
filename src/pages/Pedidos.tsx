@@ -11,13 +11,14 @@ import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ShoppingCart, Pencil, Trash2, MapPin, Undo2, Eye } from "lucide-react";
+import { ShoppingCart, Pencil, Trash2, MapPin, Undo2, Eye, FileDown } from "lucide-react";
 import { toast } from "sonner";
 import { fmtMoney, fmtDate } from "@/lib/format";
 import { ItensEditor, Item } from "@/components/ItensEditor";
 import { offlineUpdate, offlineDelete } from "@/lib/offlineWrite";
 import { SearchableSelect } from "@/components/SearchableSelect";
 import { DetailsDialog } from "@/components/DetailsDialog";
+import { generateDocumentoPDF } from "@/lib/pdf";
 
 const STATUSES = ["novo","confirmado","em_separacao","faturado","enviado","entregue","cancelado"] as const;
 const statusColor: Record<string, string> = {
@@ -153,6 +154,33 @@ export default function Pedidos() {
     load();
   };
 
+  const exportPDF = async (p: any) => {
+    try {
+      const [{ data: itensData }, { data: clienteData }] = await Promise.all([
+        supabase.from("pedido_itens").select("*").eq("pedido_id", p.id),
+        supabase.from("clientes").select("nome, empresa, cpf_cnpj, email, telefone, endereco, cidade, estado, cep").eq("id", p.cliente_id).maybeSingle(),
+      ]);
+      await generateDocumentoPDF({
+        kind: "pedido",
+        numero: p.numero,
+        status: p.status,
+        created_at: p.created_at,
+        desconto: p.desconto,
+        total: p.total,
+        observacoes: p.observacoes,
+        vendedorNome: p._vendedorNome,
+        geo_endereco: p.geo_endereco,
+        cliente: clienteData,
+        itens: (itensData || []).map((i: any) => ({
+          descricao: i.descricao, quantidade: Number(i.quantidade),
+          preco_unitario: Number(i.preco_unitario), subtotal: Number(i.subtotal),
+        })),
+      });
+    } catch (e: any) {
+      toast.error("Falha ao gerar PDF: " + (e?.message || ""));
+    }
+  };
+
   return (
     <div>
       <PageHeader title="Pedidos" description="Acompanhamento de vendas e entregas" />
@@ -201,6 +229,7 @@ export default function Pedidos() {
                 </div>
                 <div className="mt-3 flex justify-end gap-1 border-t pt-2 min-w-0">
                   <Button size="sm" variant="ghost" title="Ver detalhes" onClick={() => openView(p)}><Eye className="h-4 w-4" /></Button>
+                  <Button size="sm" variant="ghost" title="Exportar PDF" onClick={() => exportPDF(p)}><FileDown className="h-4 w-4 text-primary" /></Button>
                   <Button size="sm" variant="ghost" onClick={() => revertToOrcamento(p)} title="Reverter para orçamento">
                     <Undo2 className="h-4 w-4" />
                   </Button>
