@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, FileText, TrendingUp, Users, Package, Trophy } from "lucide-react";
-import { fmtMoney, fmtDate } from "@/lib/format";
+import { fmtMoney, fmtDate, abreviar } from "@/lib/format";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, LineChart, Line } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -165,7 +165,7 @@ export default function Dashboard() {
                       <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-gradient text-[11px] font-bold text-primary-foreground">
                         {i + 1}
                       </span>
-                      <span className="truncate text-sm font-medium min-w-0 flex-1">{r.nome}</span>
+                      <span className="truncate text-sm font-medium min-w-0 flex-1">{abreviar(r.nome, 15)}</span>
                     </div>
                     <span className="text-sm font-semibold text-primary shrink-0">{fmtMoney(r.total)}</span>
                   </button>
@@ -233,7 +233,7 @@ function DetailModal({ detail, onClose, pedidos, orcamentos, pedidoItens }: any)
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 min-w-0">
-            <span className="truncate min-w-0 flex-1" title={detail?.nome}>{detail?.nome}</span>
+            <span className="truncate min-w-0 flex-1" title={detail?.nome}>{abreviar(detail?.nome, 22)}</span>
             <Badge variant="secondary" className="text-[10px] shrink-0">{detail?.mode}</Badge>
           </DialogTitle>
         </DialogHeader>
@@ -276,7 +276,7 @@ function DetailModal({ detail, onClose, pedidos, orcamentos, pedidoItens }: any)
                     <li key={p.id} className="py-2 flex items-center justify-between text-sm">
                       <div className="min-w-0">
                         <div className="font-mono text-xs text-muted-foreground">#{p.numero}</div>
-                        <div className="truncate">{p.clientes?.nome || "—"}</div>
+                        <div className="truncate" title={p.clientes?.nome || ""}>{abreviar(p.clientes?.nome, 15)}</div>
                       </div>
                       <div className="text-right">
                         <div className="font-semibold text-primary">{fmtMoney(p.total)}</div>
@@ -296,7 +296,7 @@ function DetailModal({ detail, onClose, pedidos, orcamentos, pedidoItens }: any)
                     <li key={o.id} className="py-2 flex items-center justify-between text-sm">
                       <div className="min-w-0">
                         <div className="font-mono text-xs text-muted-foreground">#{o.numero}</div>
-                        <div className="truncate">{o.clientes?.nome || "—"}</div>
+                        <div className="truncate" title={o.clientes?.nome || ""}>{abreviar(o.clientes?.nome, 15)}</div>
                       </div>
                       <div className="text-right">
                         <div className="font-semibold">{fmtMoney(o.total)}</div>

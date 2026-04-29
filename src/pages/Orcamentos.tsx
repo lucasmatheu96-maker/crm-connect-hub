@@ -113,6 +113,8 @@ export default function Orcamentos() {
     if (editing) {
       const { error } = await offlineUpdate("orcamentos", payload, { column: "id", value: editing.id });
       if (error) { toast.error(error.message); setBusy(false); return; }
+      // log de localização da edição
+      captureLocation(getClienteFallbackAddress(form.cliente_id), { reason: "edicao_orcamento", refTable: "orcamentos", refId: editing.id }).catch(() => {});
       // limpa itens existentes (online) ou enfileira delete por orcamento
       if (navigator.onLine) {
         await supabase.from("orcamento_itens").delete().eq("orcamento_id", editing.id);
@@ -149,7 +151,11 @@ export default function Orcamentos() {
   const remove = async (id: string) => {
     if (!confirm("Excluir orçamento?")) return;
     const { error } = await offlineDelete("orcamentos", { column: "id", value: id });
-    if (error) toast.error(error.message); else { toast.success("Excluído"); load(); }
+    if (error) toast.error(error.message);
+    else {
+      captureLocation(null, { reason: "exclusao_orcamento", refTable: "orcamentos", refId: id }).catch(() => {});
+      toast.success("Excluído"); load();
+    }
   };
 
   const converterEmPedido = async (o: any) => {

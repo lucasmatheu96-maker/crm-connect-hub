@@ -78,6 +78,8 @@ export default function Clientes() {
     if (editing) {
       const { error } = await offlineUpdate("clientes", payload, { column: "id", value: editing.id });
       if (error) { toast.error(error.message); setBusy(false); return; }
+      // registra log de localização da edição
+      captureLocation(null, { reason: "edicao_cliente", refTable: "clientes", refId: editing.id }).catch(() => {});
       toast.success("Cliente atualizado");
     } else {
       const fallback = [form.endereco, form.cidade, form.estado, form.cep, "Brasil"]
@@ -100,7 +102,11 @@ export default function Clientes() {
   const remove = async (id: string) => {
     if (!confirm("Excluir este cliente?")) return;
     const { error } = await offlineDelete("clientes", { column: "id", value: id });
-    if (error) toast.error(error.message); else { toast.success("Excluído"); load(); }
+    if (error) toast.error(error.message);
+    else {
+      captureLocation(null, { reason: "exclusao_cliente", refTable: "clientes", refId: id }).catch(() => {});
+      toast.success("Excluído"); load();
+    }
   };
 
   const filtered = list.filter((c) => {

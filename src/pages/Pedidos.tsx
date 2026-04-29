@@ -90,6 +90,7 @@ export default function Pedidos() {
     };
     const { error } = await offlineUpdate("pedidos", payload, { column: "id", value: editing.id });
     if (error) { toast.error(error.message); setBusy(false); return; }
+    captureLocation(null, { reason: "edicao_pedido", refTable: "pedidos", refId: editing.id }).catch(() => {});
     if (navigator.onLine) {
       await supabase.from("pedido_itens").delete().eq("pedido_id", editing.id);
     } else {
@@ -110,7 +111,11 @@ export default function Pedidos() {
     if (!isAdmin) { toast.error("Apenas administradores podem excluir"); return; }
     if (!confirm("Excluir pedido?")) return;
     const { error } = await offlineDelete("pedidos", { column: "id", value: id });
-    if (error) toast.error(error.message); else { toast.success("Excluído"); load(); }
+    if (error) toast.error(error.message);
+    else {
+      captureLocation(null, { reason: "exclusao_pedido", refTable: "pedidos", refId: id }).catch(() => {});
+      toast.success("Excluído"); load();
+    }
   };
 
   const revertToOrcamento = async (p: any) => {
