@@ -141,12 +141,12 @@ export default function Clientes() {
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((c) => (
-              <Card key={c.id} className="p-4 hover:shadow-elevated transition-shadow">
+              <Card key={c.id} className="p-4 hover:shadow-elevated transition-shadow min-w-0">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
                       {c.codigo_externo && <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground shrink-0">#{c.codigo_externo}</span>}
-                      <div className="font-medium truncate" title={c.nome}>{c.nome}</div>
+                      <div className="font-medium truncate min-w-0 flex-1" title={c.nome}>{c.nome}</div>
                     </div>
                     {c.empresa && <div className="text-xs text-muted-foreground truncate mt-0.5" title={c.empresa}>{c.empresa}</div>}
                   </div>
