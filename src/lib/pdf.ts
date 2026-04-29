@@ -65,10 +65,12 @@ export async function generateDocumentoPDF(input: PdfDocInput) {
   doc.setFillColor(30, 64, 175); // azul corporativo
   doc.rect(0, 0, pageWidth, 90, "F");
 
-  // Logo
+  // Logo com fundo branco
   const logoData = await loadLogoDataUrl();
   if (logoData) {
-    try { doc.addImage(logoData, "PNG", margin, 18, 70, 55); } catch { /* ignore */ }
+    doc.setFillColor(255, 255, 255);
+    doc.roundedRect(margin, 18, 70, 55, 4, 4, "F");
+    try { doc.addImage(logoData, "PNG", margin + 4, 22, 62, 47); } catch { /* ignore */ }
   }
 
   // Empresa
@@ -261,7 +263,7 @@ export async function generateDocumentoPDF(input: PdfDocInput) {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
     doc.setTextColor(100, 116, 139);
-    doc.text("MedControl — CNPJ: 10.203.274/0001-31", margin, pageHeight - 24);
+    doc.text("MedControl", margin, pageHeight - 24);
     doc.text(`Página ${i} de ${pageCount}`, pageWidth - margin, pageHeight - 24, { align: "right" });
   }
 
