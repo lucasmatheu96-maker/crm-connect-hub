@@ -13,11 +13,12 @@ import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Users, MapPin, Search, Pencil, Trash2, ExternalLink } from "lucide-react";
+import { Plus, Users, MapPin, Search, Pencil, Trash2, ExternalLink, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { fmtDate } from "@/lib/format";
 import { openMapLocation } from "@/lib/maps";
 import { offlineInsert, offlineUpdate, offlineDelete } from "@/lib/offlineWrite";
+import { DetailsDialog } from "@/components/DetailsDialog";
 
 const schema = z.object({
   codigo_externo: z.string().trim().max(40).optional().or(z.literal("")),
