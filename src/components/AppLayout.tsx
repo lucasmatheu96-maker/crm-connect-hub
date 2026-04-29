@@ -133,7 +133,7 @@ export const AppLayout = ({ children }: { children: ReactNode }) => {
       </aside>
 
       {/* Main */}
-      <div className="flex min-w-0 flex-1 flex-col pb-[64px] md:pb-0">
+      <div className="flex min-w-0 flex-1 flex-col pb-[64px] md:ml-64 md:pb-0">
         <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b bg-background/85 px-4 backdrop-blur md:px-8">
           <div className="flex items-center gap-3">
             <div className="md:hidden">
