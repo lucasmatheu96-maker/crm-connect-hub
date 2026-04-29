@@ -163,7 +163,6 @@ export default function Produtos() {
           { label: "Preço sugerido", value: fmtMoney(viewing.preco) },
           { label: "Estoque (saldo)", value: viewing.disponivel ?? viewing.estoque },
           { label: "Status", value: viewing.ativo ? "Ativo" : "Inativo" },
-          { label: "Descrição", value: viewing.descricao },
         ] : []}
       />
     </div>
