@@ -24,8 +24,11 @@ function joinAddressParts(...parts: Array<string | null | undefined>) {
   return parts.map((p) => p?.toString().trim()).filter(Boolean).join(", ");
 }
 function resolveGeoAddress(geoAddress: string | null | undefined, structured: string) {
-  if (structured) return structured;
-  return geoAddress?.trim() || "";
+  // Sempre priorizar o endereço real obtido por GPS/geocoding (vendedor).
+  // O endereço estruturado (cliente) só é usado como último recurso para o cadastro do cliente.
+  const real = geoAddress?.toString().trim();
+  if (real) return real;
+  return structured || "";
 }
 
 async function callSheets(method: string, path: string, sheetsKey: string, lovKey: string, body?: any) {
@@ -274,14 +277,16 @@ Deno.serve(async (req: Request) => {
       ["Número","Cliente","CPF/CNPJ Cliente","Status","Validade","Total","Lat","Lng","Endereço GPS","Fonte","Criado em"],
       ...(orcamentosQ.data || []).map((o: any) => {
         const struct = joinAddressParts(o.clientes?.endereco, o.clientes?.cidade, o.clientes?.estado, o.clientes?.cep ? `CEP ${o.clientes.cep}` : null, "Brasil");
-        return [o.numero, o.clientes?.nome, o.clientes?.cpf_cnpj, o.status, o.validade, o.total, o.geo_lat, o.geo_lng, resolveGeoAddress(o.geo_endereco || o.clientes?.geo_endereco, struct), o.source || "app", formatDateTimeForSheet(o.created_at)];
+        // Endereço GPS = SOMENTE o local capturado do vendedor; nunca o endereço do cliente.
+        return [o.numero, o.clientes?.nome, o.clientes?.cpf_cnpj, o.status, o.validade, o.total, o.geo_lat, o.geo_lng, (o.geo_endereco || "").toString().trim(), o.source || "app", formatDateTimeForSheet(o.created_at)];
       }),
     ];
     const pedRows = [
       ["Número","Cliente","CPF/CNPJ Cliente","Status","Total","Lat","Lng","Endereço GPS","Fonte","Criado em"],
       ...(pedidosQ.data || []).map((p: any) => {
         const struct = joinAddressParts(p.clientes?.endereco, p.clientes?.cidade, p.clientes?.estado, p.clientes?.cep ? `CEP ${p.clientes.cep}` : null, "Brasil");
-        return [p.numero, p.clientes?.nome, p.clientes?.cpf_cnpj, p.status, p.total, p.geo_lat, p.geo_lng, resolveGeoAddress(p.geo_endereco || p.clientes?.geo_endereco, struct), p.source || "app", formatDateTimeForSheet(p.created_at)];
+        // Endereço GPS = SOMENTE o local capturado do vendedor; nunca o endereço do cliente.
+        return [p.numero, p.clientes?.nome, p.clientes?.cpf_cnpj, p.status, p.total, p.geo_lat, p.geo_lng, (p.geo_endereco || "").toString().trim(), p.source || "app", formatDateTimeForSheet(p.created_at)];
       }),
     ];
     const opRows = [
