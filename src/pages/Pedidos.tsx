@@ -268,9 +268,9 @@ export default function Pedidos() {
             <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">Itens</div>
             <div className="space-y-1">
               {viewItens.map((i: any) => (
-                <div key={i.id} className="flex items-center justify-between text-sm border-b py-1">
-                  <span className="truncate">{i.descricao}</span>
-                  <span className="text-muted-foreground shrink-0 ml-2">{i.quantidade} × {fmtMoney(i.preco_unitario)} = <strong>{fmtMoney(i.subtotal)}</strong></span>
+                <div key={i.id} className="flex items-center justify-between gap-2 text-sm border-b py-1 min-w-0">
+                  <span className="truncate min-w-0 flex-1" title={i.descricao}>{i.descricao}</span>
+                  <span className="text-muted-foreground shrink-0 ml-2 whitespace-nowrap">{i.quantidade} × {fmtMoney(i.preco_unitario)} = <strong>{fmtMoney(i.subtotal)}</strong></span>
                 </div>
               ))}
             </div>
