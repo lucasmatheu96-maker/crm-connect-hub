@@ -291,6 +291,17 @@ export default function Orcamentos() {
               <div><div className="text-muted-foreground">Total final</div><div className="font-bold text-primary text-base">{fmtMoney(totalCalculado)}</div></div>
             </div>
 
+            <div className="space-y-2">
+              <Label>Observações</Label>
+              <Textarea
+                value={form.observacoes || ""}
+                onChange={(e) => setForm({ ...form, observacoes: e.target.value })}
+                maxLength={2000}
+                rows={3}
+                placeholder="Notas internas, condições, instruções..."
+              />
+            </div>
+
             
 
             <DialogFooter>
