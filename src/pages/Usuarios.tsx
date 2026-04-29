@@ -28,6 +28,7 @@ import {
   CheckCircle2, XCircle, Clock, Ban, Mail,
 } from "lucide-react";
 import { fmtDateTime } from "@/lib/format";
+import { Switch } from "@/components/ui/switch";
 
 type Status = "pendente" | "ativo" | "bloqueado";
 type Role = "admin" | "vendedor";
@@ -150,6 +151,18 @@ export default function Usuarios() {
     if (error) { toast.error(error.message); return; }
     toast.success("Removido");
     load();
+  };
+
+  const toggleTracking = async (a: AuthorizedEmail, value: boolean) => {
+    // optimistic
+    setEmails((prev) => prev.map((x) => x.id === a.id ? { ...x, track_location: value } : x));
+    const { error } = await supabase.from("authorized_emails").update({ track_location: value }).eq("id", a.id);
+    if (error) {
+      toast.error(error.message);
+      setEmails((prev) => prev.map((x) => x.id === a.id ? { ...x, track_location: !value } : x));
+    } else {
+      toast.success(value ? "Rastreamento ativado (8h–18h, dias úteis)" : "Rastreamento desativado");
+    }
   };
 
   const stats = {
