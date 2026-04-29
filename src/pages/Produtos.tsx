@@ -23,7 +23,7 @@ const schema = z.object({
   categoria: z.string().trim().max(80).optional().or(z.literal("")),
   descricao: z.string().trim().max(2000).optional().or(z.literal("")),
   preco: z.coerce.number().min(0),
-  estoque: z.coerce.number().int().min(0),
+  estoque: z.coerce.number().int(),
   ativo: z.boolean().default(true),
 });
 
@@ -108,7 +108,7 @@ export default function Produtos() {
                   </div>
                   <div className="text-right">
                     <div className="text-[10px] uppercase text-muted-foreground tracking-wide">Estoque</div>
-                    <div className="text-lg font-semibold">{p.estoque}</div>
+                    <div className={`text-lg font-semibold ${(p.disponivel ?? p.estoque) < 0 ? "text-destructive" : ""}`}>{p.disponivel ?? p.estoque}</div>
                   </div>
                 </div>
                 {isAdmin && (
@@ -132,7 +132,7 @@ export default function Produtos() {
             <div className="space-y-2"><Label>Categoria</Label><Input value={form.categoria || ""} onChange={(e) => setForm({ ...form, categoria: e.target.value })} /></div>
             <div className="space-y-2"><Label>Unidade de medida</Label><Input value={form.unidade || ""} disabled readOnly placeholder="(da planilha)" /></div>
             <div className="space-y-2"><Label>Preço sugerido (R$)</Label><Input type="number" step="0.01" min="0" value={form.preco} onChange={(e) => setForm({ ...form, preco: e.target.value })} /></div>
-            <div className="space-y-2"><Label>Estoque</Label><Input type="number" min="0" value={form.estoque} onChange={(e) => setForm({ ...form, estoque: e.target.value })} /></div>
+            <div className="space-y-2"><Label>Estoque (saldo)</Label><Input type="number" value={form.disponivel ?? form.estoque ?? 0} onChange={(e) => setForm({ ...form, disponivel: e.target.value, estoque: e.target.value })} /></div>
             <div className="sm:col-span-2 space-y-2"><Label>Descrição</Label><Textarea value={form.descricao || ""} onChange={(e) => setForm({ ...form, descricao: e.target.value })} rows={3} /></div>
             <div className="flex items-center gap-2"><Switch checked={form.ativo} onCheckedChange={(v) => setForm({ ...form, ativo: v })} /><Label>Ativo</Label></div>
             <DialogFooter className="sm:col-span-2">
