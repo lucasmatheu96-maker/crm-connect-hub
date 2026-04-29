@@ -214,6 +214,7 @@ Deno.serve(async (req: Request) => {
         const preco = toNumBR(getCol(r, "Vlr. Consumidor", "Vlr Consumidor", "Preço Sugerido", "Preço"));
         const disponivel = toNumBR(getCol(r, "Disponível", "Disponivel"));
         const unidade = norm(getCol(r, "Unid.", "Unidade", "Unid"));
+        const classificacao = norm(getCol(r, "Classificação", "Classificacao", "Classificação Produto"));
 
         const payload: any = {
           owner_id: adminUserId, // produtos pertencem ao admin
@@ -222,6 +223,7 @@ Deno.serve(async (req: Request) => {
           sku: codigo || null,
           nome: descricao || `Produto ${codigo}`,
           descricao: descricao || null,
+          categoria: classificacao || null,
           unidade: unidade || null,
           preco: preco,
           preco_sugerido: preco,
