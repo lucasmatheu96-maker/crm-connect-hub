@@ -169,7 +169,9 @@ export default function Pedidos() {
         total: p.total,
         observacoes: p.observacoes,
         vendedorNome: p._vendedorNome,
-        geo_endereco: p.geo_endereco,
+        forma_pagamento: p.forma_pagamento,
+        prazo_entrega: p.prazo_entrega,
+        frete: p.frete,
         cliente: clienteData,
         itens: (itensData || []).map((i: any) => ({
           descricao: i.descricao, quantidade: Number(i.quantidade),
