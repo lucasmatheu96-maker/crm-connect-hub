@@ -87,6 +87,7 @@ export type Database = {
           role: Database["public"]["Enums"]["app_role"]
           status: string
           telefone: string | null
+          track_location: boolean
           updated_at: string
         }
         Insert: {
@@ -101,6 +102,7 @@ export type Database = {
           role?: Database["public"]["Enums"]["app_role"]
           status?: string
           telefone?: string | null
+          track_location?: boolean
           updated_at?: string
         }
         Update: {
@@ -115,6 +117,7 @@ export type Database = {
           role?: Database["public"]["Enums"]["app_role"]
           status?: string
           telefone?: string | null
+          track_location?: boolean
           updated_at?: string
         }
         Relationships: []
@@ -197,6 +200,33 @@ export type Database = {
           uf?: string | null
           updated_at?: string
           vendedor_responsavel?: string | null
+        }
+        Relationships: []
+      }
+      location_pings: {
+        Row: {
+          created_at: string
+          geo_endereco: string | null
+          geo_lat: number | null
+          geo_lng: number | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          geo_endereco?: string | null
+          geo_lat?: number | null
+          geo_lng?: number | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          geo_endereco?: string | null
+          geo_lat?: number | null
+          geo_lng?: number | null
+          id?: string
+          user_id?: string
         }
         Relationships: []
       }
