@@ -374,25 +374,33 @@ Deno.serve(async (req: Request) => {
       ["ID","Nome","SKU","Categoria","Preço","Estoque","Ativo","Fonte","Criado em"],
       ...(produtosQ.data || []).map((p: any) => [p.id, p.nome, p.sku, p.categoria, p.preco, p.estoque, p.ativo, p.source || "app", formatDateTimeForSheet(p.created_at)]),
     ];
+    const orcData = await Promise.all((orcamentosQ.data || []).map(async (o: any) => {
+      const cli = clienteById.get(o.cliente_id);
+      const geoAddress = await resolveGeoForExport(o.geo_endereco, o.geo_lat, o.geo_lng);
+      return [o.numero, cli?.nome || "", cli?.cpf_cnpj || "", o.status, o.validade, o.total, o.geo_lat, o.geo_lng, geoAddress, o.source || "app", formatDateTimeForSheet(o.created_at)];
+    }));
     const orcRows = [
       ["Número","Cliente","CPF/CNPJ Cliente","Status","Validade","Total","Lat","Lng","Endereço GPS","Fonte","Criado em"],
-      ...(orcamentosQ.data || []).map((o: any) => {
-        const cli = clienteById.get(o.cliente_id);
-        return [o.numero, cli?.nome || "", cli?.cpf_cnpj || "", o.status, o.validade, o.total, o.geo_lat, o.geo_lng, (o.geo_endereco || "").toString().trim(), o.source || "app", formatDateTimeForSheet(o.created_at)];
-      }),
+      ...orcData,
     ];
+    const pedData = await Promise.all((pedidosQ.data || []).map(async (p: any) => {
+      const cli = clienteById.get(p.cliente_id);
+      const geoAddress = await resolveGeoForExport(p.geo_endereco, p.geo_lat, p.geo_lng);
+      return [p.numero, cli?.nome || "", cli?.cpf_cnpj || "", p.status, p.total, p.geo_lat, p.geo_lng, geoAddress, p.source || "app", formatDateTimeForSheet(p.created_at)];
+    }));
     const pedRows = [
       ["Número","Cliente","CPF/CNPJ Cliente","Status","Total","Lat","Lng","Endereço GPS","Fonte","Criado em"],
-      ...(pedidosQ.data || []).map((p: any) => {
-        const cli = clienteById.get(p.cliente_id);
-        return [p.numero, cli?.nome || "", cli?.cpf_cnpj || "", p.status, p.total, p.geo_lat, p.geo_lng, (p.geo_endereco || "").toString().trim(), p.source || "app", formatDateTimeForSheet(p.created_at)];
-      }),
+      ...pedData,
     ];
+    const opData = await Promise.all((oportQ.data || []).map(async (o: any) => {
+      const geoAddress = await resolveGeoForExport(o.geo_endereco, o.geo_lat, o.geo_lng);
+      const cli = clienteById.get(o.cliente_id);
+      return [o.titulo, cli?.nome || "", o.estagio, o.valor, o.probabilidade, o.data_fechamento_prevista, o.geo_lat, o.geo_lng, geoAddress, formatDateTimeForSheet(o.created_at)];
+    }));
     const opRows = [
-      ["Título","Cliente","Estágio","Valor","Probabilidade","Fechamento previsto","Criado em"],
-      ...(oportQ.data || []).map((o: any) => {
-        const cli = clienteById.get(o.cliente_id);
-        return [o.titulo, cli?.nome || "", o.estagio, o.valor, o.probabilidade, o.data_fechamento_prevista, formatDateTimeForSheet(o.created_at)];
+      ["Título","Cliente","Estágio","Valor","Probabilidade","Fechamento previsto","Lat","Lng","Endereço GPS","Criado em"],
+      ...opData.map((o: any) => {
+        return o;
       }),
     ];
 
