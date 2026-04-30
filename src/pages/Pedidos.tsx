@@ -220,15 +220,23 @@ export default function Pedidos() {
                     <div className="text-[10px] uppercase text-muted-foreground tracking-wide">Total</div>
                     <div className="text-lg font-semibold truncate">{fmtMoney(p.total)}</div>
                   </div>
-                  <div className="text-right text-xs text-muted-foreground shrink-0 inline-flex items-center gap-1">
+                  <div className="text-right text-xs text-muted-foreground shrink-0">
                     <span>{fmtDate(p.created_at)}</span>
-                    {isAdmin && p.geo_lat && p.geo_lng && (
-                      <a href={`https://www.google.com/maps?q=${p.geo_lat},${p.geo_lng}`} target="_blank" rel="noreferrer" className="inline-flex" title="Ver no mapa">
-                        <MapPin className="h-3 w-3 text-primary" />
-                      </a>
-                    )}
                   </div>
                 </div>
+                {isAdmin && (p.geo_endereco || (p.geo_lat && p.geo_lng)) && (
+                  <div className="mt-2 min-w-0">
+                    <a
+                      href={p.geo_lat && p.geo_lng ? `https://www.google.com/maps?q=${p.geo_lat},${p.geo_lng}` : "#"}
+                      target="_blank" rel="noreferrer"
+                      title={p.geo_endereco || `${p.geo_lat}, ${p.geo_lng}`}
+                      className="inline-flex items-center gap-1 text-xs text-primary hover:underline max-w-full truncate"
+                    >
+                      <MapPin className="h-3 w-3 shrink-0" />
+                      <span className="truncate">{p.geo_endereco || `${Number(p.geo_lat).toFixed(4)}, ${Number(p.geo_lng).toFixed(4)}`}</span>
+                    </a>
+                  </div>
+                )}
                 <div className="mt-3 flex justify-end gap-1 border-t pt-2 min-w-0">
                   <Button size="sm" variant="ghost" title="Ver detalhes" onClick={() => openView(p)}><Eye className="h-4 w-4" /></Button>
                   <Button size="sm" variant="ghost" title="Exportar PDF" onClick={() => exportPDF(p)}><FileDown className="h-4 w-4 text-primary" /></Button>

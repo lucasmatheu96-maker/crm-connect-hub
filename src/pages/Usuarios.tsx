@@ -68,9 +68,18 @@ interface AccessLog {
 
 const reasonContextLabel: Record<string, string> = {
   cadastro_orcamento: "Cadastro de orçamento",
+  edicao_orcamento: "Edição de orçamento",
+  exclusao_orcamento: "Exclusão de orçamento",
   conversao_pedido: "Conversão em pedido",
+  edicao_pedido: "Edição de pedido",
+  exclusao_pedido: "Exclusão de pedido",
   cadastro_cliente: "Cadastro de cliente",
+  edicao_cliente: "Edição de cliente",
+  exclusao_cliente: "Exclusão de cliente",
   cadastro_oportunidade: "Cadastro no funil",
+  edicao_oportunidade: "Edição de oportunidade",
+  exclusao_oportunidade: "Exclusão de oportunidade",
+  movimentacao_funil: "Movimentação no funil",
   ping_periodico: "Captura periódica (2h)",
 };
 
@@ -405,6 +414,8 @@ export default function Usuarios() {
                           >
                             {l.geo_endereco || `${l.geo_lat?.toFixed(4)}, ${l.geo_lng?.toFixed(4)}`}
                           </a>
+                        ) : isLoc ? (
+                          <span className="text-muted-foreground italic" title={l.reason || ""}>GPS indisponível</span>
                         ) : <span className="text-muted-foreground">—</span>}
                       </TableCell>
                       <TableCell>

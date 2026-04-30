@@ -270,10 +270,12 @@ export default function Orcamentos() {
                 <div className="mt-3 flex items-center justify-between gap-2 border-t pt-2 min-w-0">
                   <div className="min-w-0 flex-1 truncate">
                     {isAdmin ? (
-                      o.geo_lat && o.geo_lng ? (
-                        <button type="button" onClick={() => handleOpenMap(o.geo_lat, o.geo_lng)}
-                          className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
-                          <MapPin className="h-3 w-3" /> Mapa
+                      (o.geo_endereco || (o.geo_lat && o.geo_lng)) ? (
+                        <button type="button" onClick={() => o.geo_lat && o.geo_lng && handleOpenMap(o.geo_lat, o.geo_lng)}
+                          title={o.geo_endereco || `${o.geo_lat}, ${o.geo_lng}`}
+                          className="inline-flex items-center gap-1 text-xs text-primary hover:underline max-w-full truncate">
+                          <MapPin className="h-3 w-3 shrink-0" />
+                          <span className="truncate">{o.geo_endereco || `${Number(o.geo_lat).toFixed(4)}, ${Number(o.geo_lng).toFixed(4)}`}</span>
                         </button>
                       ) : <span className="text-xs text-muted-foreground">Sem GPS</span>
                     ) : null}
