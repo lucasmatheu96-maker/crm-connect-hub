@@ -265,6 +265,7 @@ export default function Usuarios() {
               <TableHeader>
                 <TableRow>
                   <TableHead>E-mail / Nome</TableHead>
+                  <TableHead>Telefone</TableHead>
                   <TableHead>Papel</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Cadastrado</TableHead>
