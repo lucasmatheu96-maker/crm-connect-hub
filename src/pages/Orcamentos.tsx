@@ -69,6 +69,12 @@ export default function Orcamentos() {
     const profMap = new Map((profs || []).map((p: any) => [p.user_id, p.nome]));
     const enriched = (orcs || []).map((o: any) => ({ ...o, _temPedido: pedidoOrcIds.has(o.id), _vendedorNome: profMap.get(o.owner_id) || "—" }));
     setList(enriched); setClientes(cls || []); setVendedores(profs || []); setLoading(false);
+
+    const pendentes = enriched.filter((o: any) => o.geo_lat && o.geo_lng && isCoordFallback(o.geo_endereco));
+    pendentes.forEach(async (o: any) => {
+      const addr = await backfillGeoEndereco("orcamentos", o.id, o.geo_lat, o.geo_lng);
+      if (addr) setList((cur) => cur.map((x) => (x.id === o.id ? { ...x, geo_endereco: addr } : x)));
+    });
   };
 
   const listFiltrada = filtroVendedor === "todos" ? list : list.filter((o) => o.owner_id === filtroVendedor);
