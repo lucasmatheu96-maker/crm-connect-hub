@@ -81,6 +81,7 @@ export async function generateDocumentoPDF(input: PdfDocInput) {
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.text("CNPJ: 10.203.274/0001-31", margin + 85, 58);
+  doc.text("Tel: (14) 3208-7108", margin + 85, 71);
 
   // Título e número à direita
   doc.setFont("helvetica", "bold");
