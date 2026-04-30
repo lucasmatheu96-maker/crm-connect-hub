@@ -19,6 +19,7 @@ import { offlineUpdate, offlineDelete } from "@/lib/offlineWrite";
 import { SearchableSelect } from "@/components/SearchableSelect";
 import { DetailsDialog } from "@/components/DetailsDialog";
 import { generateDocumentoPDF } from "@/lib/pdf";
+import { backfillGeoEndereco, isCoordFallback } from "@/lib/geoBackfill";
 
 const STATUSES = ["novo","confirmado","em_separacao","faturado","enviado","entregue","cancelado"] as const;
 const statusColor: Record<string, string> = {
