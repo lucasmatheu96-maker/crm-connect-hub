@@ -91,7 +91,8 @@ export async function captureLocation(
   const geo: GeoCapture = {
     geo_lat: lat,
     geo_lng: lng,
-    geo_endereco: endereco ?? `Lat ${lat.toFixed(6)}, Lng ${lng.toFixed(6)}`,
+    // Mantém null quando o reverse-geocode falha — assim a UI/backfill pode tentar resolver depois
+    geo_endereco: endereco ?? null,
   };
   await logCapture(geo, options, true);
   return geo;
