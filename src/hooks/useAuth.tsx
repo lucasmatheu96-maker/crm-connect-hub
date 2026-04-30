@@ -28,7 +28,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     // 1) listener primeiro
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
       setSession(newSession);
       setUser(newSession?.user ?? null);
       if (newSession?.user) {
@@ -36,8 +36,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setTimeout(() => {
           fetchRole(newSession.user.id);
         }, 0);
+
+        // Registra login real (não dispara em TOKEN_REFRESHED nem USER_UPDATED)
+        if (event === "SIGNED_IN") {
+          const u = newSession.user;
+          const key = `access_log_login_${u.id}_${newSession.access_token?.slice(-10)}`;
+          if (!sessionStorage.getItem(key)) {
+            sessionStorage.setItem(key, "1");
+            setTimeout(() => {
+              supabase.from("access_logs").insert({
+                email: u.email,
+                user_id: u.id,
+                action: "login",
+                success: true,
+                provider: (u.app_metadata as any)?.provider || "google",
+                user_agent: navigator.userAgent,
+              }).then(({ error }) => {
+                if (error) console.warn("[access_logs] login insert failed", error.message);
+              });
+            }, 0);
+          }
+        }
       } else {
         setRole(null);
+        if (event === "SIGNED_OUT") {
+          // best-effort: o user já foi limpo, então só logamos se tivermos email no estado anterior
+        }
       }
     });
 
