@@ -255,8 +255,10 @@ Deno.serve(async (req: Request) => {
         }
       }
     };
-    await importDocs("Orcamentos", "orcamentos");
-    await importDocs("Pedidos", "pedidos");
+    await Promise.all([
+      importDocs("Orcamentos", "orcamentos"),
+      importDocs("Pedidos", "pedidos"),
+    ]);
 
     // ============ FASE 2: EXPORTAR DO APP PARA A PLANILHA ============
 
@@ -313,11 +315,16 @@ Deno.serve(async (req: Request) => {
       }),
     ];
 
-    await writeTab(spreadsheetId, "Clientes", clientesRows, sheetsKey, lovKey);
-    await writeTab(spreadsheetId, "Produtos", produtosRows, sheetsKey, lovKey);
-    await writeTab(spreadsheetId, "Orcamentos", orcRows, sheetsKey, lovKey);
-    await writeTab(spreadsheetId, "Pedidos", pedRows, sheetsKey, lovKey);
-    await writeTab(spreadsheetId, "Oportunidades", opRows, sheetsKey, lovKey);
+    const writeResults = await Promise.allSettled([
+      writeTab(spreadsheetId, "Clientes", clientesRows, sheetsKey, lovKey),
+      writeTab(spreadsheetId, "Produtos", produtosRows, sheetsKey, lovKey),
+      writeTab(spreadsheetId, "Orcamentos", orcRows, sheetsKey, lovKey),
+      writeTab(spreadsheetId, "Pedidos", pedRows, sheetsKey, lovKey),
+      writeTab(spreadsheetId, "Oportunidades", opRows, sheetsKey, lovKey),
+    ]);
+    writeResults.forEach((r, i) => {
+      if (r.status === "rejected") console.error(`[sync-sheets] writeTab idx=${i} falhou:`, r.reason);
+    });
 
     return new Response(JSON.stringify({
       success: true,
