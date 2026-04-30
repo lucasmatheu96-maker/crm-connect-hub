@@ -78,6 +78,7 @@ export default function Funil() {
     let error: any = null;
     if (editing) {
       ({ error } = await supabase.from("oportunidades").update(payload).eq("id", editing.id));
+      if (!error) captureLocation(null, { reason: "edicao_oportunidade", refTable: "oportunidades", refId: editing.id }).catch(() => {});
     } else {
       const geo = await captureLocation(null, { reason: "cadastro_oportunidade" });
       ({ error } = await supabase.from("oportunidades").insert({ ...payload, owner_id: user!.id, ...geo }));
@@ -93,11 +94,13 @@ export default function Funil() {
     setItems(items.map((i) => i.id === id ? { ...i, estagio: stage } : i));
     const { error } = await supabase.from("oportunidades").update({ estagio: stage }).eq("id", id);
     if (error) { toast.error(error.message); load(); }
+    else captureLocation(null, { reason: "movimentacao_funil", refTable: "oportunidades", refId: id }).catch(() => {});
   };
 
   const remove = async (id: string) => {
     if (!confirm("Excluir oportunidade?")) return;
     await supabase.from("oportunidades").delete().eq("id", id);
+    captureLocation(null, { reason: "exclusao_oportunidade", refTable: "oportunidades", refId: id }).catch(() => {});
     load();
   };
 
@@ -145,10 +148,16 @@ export default function Funil() {
                       <span className="text-sm font-bold text-primary">{fmtMoney(it.valor)}</span>
                       <span className="text-[10px] text-muted-foreground">{it.probabilidade}%</span>
                     </div>
-                    {isAdmin && it.geo_lat && (
-                      <div className="mt-1 text-[10px] text-muted-foreground flex items-center gap-1">
-                        <MapPin className="h-3 w-3" /> Localização registrada
-                      </div>
+                    {isAdmin && (it.geo_endereco || it.geo_lat) && (
+                      <a
+                        href={it.geo_lat && it.geo_lng ? `https://www.google.com/maps?q=${it.geo_lat},${it.geo_lng}` : "#"}
+                        target="_blank" rel="noreferrer"
+                        title={it.geo_endereco || `${it.geo_lat}, ${it.geo_lng}`}
+                        className="mt-1 text-[10px] text-primary hover:underline flex items-center gap-1 truncate"
+                      >
+                        <MapPin className="h-3 w-3 shrink-0" />
+                        <span className="truncate">{it.geo_endereco || `${Number(it.geo_lat).toFixed(4)}, ${Number(it.geo_lng).toFixed(4)}`}</span>
+                      </a>
                     )}
                   </Card>
                 ))}
