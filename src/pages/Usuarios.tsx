@@ -355,7 +355,12 @@ export default function Usuarios() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="logs" className="mt-4">
+        <TabsContent value="logs" className="mt-4 space-y-3">
+          <div className="flex justify-end">
+            <Button variant="outline" size="sm" onClick={load} disabled={loading}>
+              <RefreshCw className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} /> Atualizar
+            </Button>
+          </div>
           <Card className="overflow-hidden shadow-elevated">
             <Table>
               <TableHeader>
