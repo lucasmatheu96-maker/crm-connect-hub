@@ -46,6 +46,59 @@ function buildDetailedAddress(result: any) {
   };
 }
 
+function buildAddressFromParts(parts: Array<string | null | undefined>) {
+  return parts.map((part) => part?.toString().trim()).filter(Boolean).join(" • ") || null;
+}
+
+function buildNominatimAddress(result: any) {
+  const address = result?.address ?? {};
+  const streetLine = [address.road, address.house_number].filter(Boolean).join(", ");
+  const localityLine = [address.suburb || address.neighbourhood, address.city || address.town || address.village].filter(Boolean).join(" - ");
+  const regionLine = [address.state, address.postcode ? `CEP ${address.postcode}` : null, address.country].filter(Boolean).join(", ");
+
+  return {
+    address: buildAddressFromParts([streetLine, localityLine, regionLine]) || result?.display_name || null,
+    street: address.road ?? null,
+    street_number: address.house_number ?? null,
+    postal_code: address.postcode ?? null,
+    neighborhood: address.suburb ?? address.neighbourhood ?? null,
+    city: address.city ?? address.town ?? address.village ?? null,
+    state: address.state ?? null,
+    country: address.country ?? null,
+    formatted_address: result?.display_name ?? null,
+  };
+}
+
+async function reverseWithNominatim(lat: number, lng: number) {
+  const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&accept-language=pt-BR&lat=${lat}&lon=${lng}`;
+  const r = await fetch(url, {
+    headers: {
+      "User-Agent": "Lovable CRM/1.0",
+      "Accept-Language": "pt-BR",
+    },
+  });
+  const data: any = await r.json().catch(() => ({}));
+  return buildNominatimAddress(data);
+}
+
+async function forwardWithNominatim(address: string) {
+  const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&accept-language=pt-BR&q=${encodeURIComponent(address)}`;
+  const r = await fetch(url, {
+    headers: {
+      "User-Agent": "Lovable CRM/1.0",
+      "Accept-Language": "pt-BR",
+    },
+  });
+  const data: any[] = await r.json().catch(() => []);
+  const result = data?.[0];
+  if (!result) return { lat: null, lng: null, address: null, formatted_address: null };
+  return {
+    lat: result.lat != null ? Number(result.lat) : null,
+    lng: result.lon != null ? Number(result.lon) : null,
+    ...buildNominatimAddress(result),
+  };
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
@@ -71,7 +124,7 @@ Deno.serve(async (req: Request) => {
       }
 
       const result = data?.results?.[0];
-      const detailed = buildDetailedAddress(result);
+      const detailed = result ? buildDetailedAddress(result) : await reverseWithNominatim(lat, lng);
 
       return new Response(JSON.stringify({
         lat,
@@ -92,17 +145,11 @@ Deno.serve(async (req: Request) => {
       }
 
       const result = data?.results?.[0];
-      if (!result) {
-        return new Response(JSON.stringify({ address: null, lat: null, lng: null }), {
-          status: 200,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      const detailed = buildDetailedAddress(result);
+      const fallback = !result ? await forwardWithNominatim(address) : null;
+      const detailed = result ? buildDetailedAddress(result) : fallback;
       return new Response(JSON.stringify({
-        lat: result.geometry?.location?.lat ?? null,
-        lng: result.geometry?.location?.lng ?? null,
+        lat: result?.geometry?.location?.lat ?? fallback?.lat ?? null,
+        lng: result?.geometry?.location?.lng ?? fallback?.lng ?? null,
         ...detailed,
       }), {
         status: 200,
