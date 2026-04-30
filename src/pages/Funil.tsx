@@ -45,7 +45,14 @@ export default function Funil() {
       supabase.from("oportunidades").select("*, clientes(nome)").order("posicao"),
       supabase.from("clientes").select("id, nome, codigo_externo, empresa, cidade, estado").order("nome"),
     ]);
-    setItems(ops || []); setClientes(cls || []);
+    const list = ops || [];
+    setItems(list); setClientes(cls || []);
+
+    const pendentes = list.filter((o: any) => o.geo_lat && o.geo_lng && isCoordFallback(o.geo_endereco));
+    pendentes.forEach(async (o: any) => {
+      const addr = await backfillGeoEndereco("oportunidades", o.id, o.geo_lat, o.geo_lng);
+      if (addr) setItems((cur) => cur.map((x) => (x.id === o.id ? { ...x, geo_endereco: addr } : x)));
+    });
   };
 
   const openNew = () => { setEditing(null); setForm({ estagio: "lead", probabilidade: 20, valor: 0 }); setOpen(true); };
