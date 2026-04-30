@@ -276,7 +276,7 @@ export default function Usuarios() {
               </TableHeader>
               <TableBody>
                 {emails.length === 0 && !loading && (
-                  <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                     Nenhum e-mail autorizado ainda. Adicione um para liberar o acesso.
                   </TableCell></TableRow>
                 )}
