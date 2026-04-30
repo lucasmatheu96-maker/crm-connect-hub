@@ -261,12 +261,24 @@ Deno.serve(async (req: Request) => {
     // ============ FASE 2: EXPORTAR DO APP PARA A PLANILHA ============
 
     const [clientesQ, produtosQ, orcamentosQ, pedidosQ, oportQ] = await Promise.all([
-      supabase.from("clientes").select("*").order("created_at", { ascending: false }),
-      supabase.from("produtos").select("*").order("created_at", { ascending: false }),
-      supabase.from("orcamentos").select("*, clientes(nome, cpf_cnpj, endereco, cidade, estado, cep, geo_endereco)").order("created_at", { ascending: false }),
-      supabase.from("pedidos").select("*, clientes(nome, cpf_cnpj, endereco, cidade, estado, cep, geo_endereco)").order("created_at", { ascending: false }),
-      supabase.from("oportunidades").select("*, clientes(nome)").order("created_at", { ascending: false }),
+      supabase.from("clientes").select("*").order("created_at", { ascending: false }).limit(5000),
+      supabase.from("produtos").select("*").order("created_at", { ascending: false }).limit(5000),
+      supabase.from("orcamentos").select("*").order("created_at", { ascending: false }).limit(5000),
+      supabase.from("pedidos").select("*").order("created_at", { ascending: false }).limit(5000),
+      supabase.from("oportunidades").select("*").order("created_at", { ascending: false }).limit(5000),
     ]);
+
+    if (clientesQ.error) console.error("[sync-sheets] clientesQ error:", clientesQ.error);
+    if (produtosQ.error) console.error("[sync-sheets] produtosQ error:", produtosQ.error);
+    if (orcamentosQ.error) console.error("[sync-sheets] orcamentosQ error:", orcamentosQ.error);
+    if (pedidosQ.error) console.error("[sync-sheets] pedidosQ error:", pedidosQ.error);
+    if (oportQ.error) console.error("[sync-sheets] oportQ error:", oportQ.error);
+
+    console.log(`[sync-sheets] export counts: clientes=${clientesQ.data?.length || 0} produtos=${produtosQ.data?.length || 0} orcamentos=${orcamentosQ.data?.length || 0} pedidos=${pedidosQ.data?.length || 0} oportunidades=${oportQ.data?.length || 0}`);
+
+    // Mapa de clientes por id (para enriquecer orçamentos/pedidos/oportunidades sem depender de FK embed)
+    const clienteById = new Map<string, any>();
+    (clientesQ.data || []).forEach((c: any) => clienteById.set(c.id, c));
 
     const clientesRows = [
       ["ID","Nome","Empresa","CPF/CNPJ","Email","Telefone","Endereço","Cidade","Estado","CEP","Lat","Lng","Endereço GPS","Fonte","Criado em"],
@@ -282,22 +294,23 @@ Deno.serve(async (req: Request) => {
     const orcRows = [
       ["Número","Cliente","CPF/CNPJ Cliente","Status","Validade","Total","Lat","Lng","Endereço GPS","Fonte","Criado em"],
       ...(orcamentosQ.data || []).map((o: any) => {
-        const struct = joinAddressParts(o.clientes?.endereco, o.clientes?.cidade, o.clientes?.estado, o.clientes?.cep ? `CEP ${o.clientes.cep}` : null, "Brasil");
-        // Endereço GPS = SOMENTE o local capturado do vendedor; nunca o endereço do cliente.
-        return [o.numero, o.clientes?.nome, o.clientes?.cpf_cnpj, o.status, o.validade, o.total, o.geo_lat, o.geo_lng, (o.geo_endereco || "").toString().trim(), o.source || "app", formatDateTimeForSheet(o.created_at)];
+        const cli = clienteById.get(o.cliente_id);
+        return [o.numero, cli?.nome || "", cli?.cpf_cnpj || "", o.status, o.validade, o.total, o.geo_lat, o.geo_lng, (o.geo_endereco || "").toString().trim(), o.source || "app", formatDateTimeForSheet(o.created_at)];
       }),
     ];
     const pedRows = [
       ["Número","Cliente","CPF/CNPJ Cliente","Status","Total","Lat","Lng","Endereço GPS","Fonte","Criado em"],
       ...(pedidosQ.data || []).map((p: any) => {
-        const struct = joinAddressParts(p.clientes?.endereco, p.clientes?.cidade, p.clientes?.estado, p.clientes?.cep ? `CEP ${p.clientes.cep}` : null, "Brasil");
-        // Endereço GPS = SOMENTE o local capturado do vendedor; nunca o endereço do cliente.
-        return [p.numero, p.clientes?.nome, p.clientes?.cpf_cnpj, p.status, p.total, p.geo_lat, p.geo_lng, (p.geo_endereco || "").toString().trim(), p.source || "app", formatDateTimeForSheet(p.created_at)];
+        const cli = clienteById.get(p.cliente_id);
+        return [p.numero, cli?.nome || "", cli?.cpf_cnpj || "", p.status, p.total, p.geo_lat, p.geo_lng, (p.geo_endereco || "").toString().trim(), p.source || "app", formatDateTimeForSheet(p.created_at)];
       }),
     ];
     const opRows = [
       ["Título","Cliente","Estágio","Valor","Probabilidade","Fechamento previsto","Criado em"],
-      ...(oportQ.data || []).map((o: any) => [o.titulo, o.clientes?.nome, o.estagio, o.valor, o.probabilidade, o.data_fechamento_prevista, formatDateTimeForSheet(o.created_at)]),
+      ...(oportQ.data || []).map((o: any) => {
+        const cli = clienteById.get(o.cliente_id);
+        return [o.titulo, cli?.nome || "", o.estagio, o.valor, o.probabilidade, o.data_fechamento_prevista, formatDateTimeForSheet(o.created_at)];
+      }),
     ];
 
     await writeTab(spreadsheetId, "Clientes", clientesRows, sheetsKey, lovKey);
