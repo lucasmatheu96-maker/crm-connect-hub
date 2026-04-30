@@ -22,6 +22,7 @@ import { offlineInsert, offlineUpdate, offlineDelete } from "@/lib/offlineWrite"
 import { SearchableSelect } from "@/components/SearchableSelect";
 import { DetailsDialog } from "@/components/DetailsDialog";
 import { generateDocumentoPDF } from "@/lib/pdf";
+import { backfillGeoEndereco, isCoordFallback } from "@/lib/geoBackfill";
 
 const STATUSES = ["rascunho","enviado","aprovado","rejeitado","expirado"] as const;
 const statusColor: Record<string, string> = {
