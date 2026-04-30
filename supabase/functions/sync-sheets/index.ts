@@ -264,17 +264,11 @@ Deno.serve(async (req: Request) => {
     ) => {
       const rows = await readTab(spreadsheetId, tab, sheetsKey, lovKey);
       const objs = rowsToObjects(rows);
-      const { data: existing } = await supabase.from(table).select("id, numero");
-      const byNumero = new Map<number, string>();
-      (existing || []).forEach((d: any) => byNumero.set(Number(d.numero), d.id));
-
-      const { data: cli } = await supabase.from("clientes").select("id, cpf_cnpj, nome");
-      const cliByCpf = new Map<string, string>();
-      const cliByNome = new Map<string, string>();
-      (cli || []).forEach((c: any) => {
-        if (c.cpf_cnpj) cliByCpf.set(onlyDigits(c.cpf_cnpj), c.id);
-        if (c.nome) cliByNome.set(norm(c.nome), c.id);
-      });
+      const { data: existing } = await supabase.from(table).select("id, numero, source");
+      const byNumero = new Map<number, { id: string; source: string | null }>();
+      (existing || []).forEach((d: any) => byNumero.set(Number(d.numero), { id: d.id, source: d.source || null }));
+      const toInsert: any[] = [];
+      const toUpdate: any[] = [];
 
       for (const o of objs) {
         const numero = toInt(o["Número"] || "0");
@@ -294,14 +288,17 @@ Deno.serve(async (req: Request) => {
         };
         if (table === "orcamentos" && o["Validade"]) base.validade = o["Validade"];
 
-        if (numero && byNumero.has(numero)) {
-          await supabase.from(table).update(base).eq("id", byNumero.get(numero)!).eq("source", "sheet");
+        const existingRow = numero ? byNumero.get(numero) : null;
+        if (existingRow?.source === "sheet") {
+          toUpdate.push({ id: existingRow.id, ...base });
         } else {
           const insertPayload = numero ? { ...base, numero } : base;
-          const { error } = await supabase.from(table).insert(insertPayload);
-          if (!error) imported[table]++;
+          if (!existingRow) toInsert.push(insertPayload);
         }
       }
+
+      await upsertRowsByIdInChunks(supabase, table, toUpdate);
+      imported[table] += await insertRowsInChunks(supabase, table, toInsert);
     };
     await Promise.all([
       importDocs("Orcamentos", "orcamentos"),
