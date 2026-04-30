@@ -65,6 +65,13 @@ export default function Pedidos() {
     const profMap = new Map((profs || []).map((p: any) => [p.user_id, p.nome]));
     const enriched = (peds || []).map((p: any) => ({ ...p, _vendedorNome: profMap.get(p.owner_id) || "—" }));
     setList(enriched); setClientes(cls || []); setVendedores(profs || []); setLoading(false);
+
+    // Backfill: registros com geo_lat/lng porém sem endereço (ou com fallback "Lat X, Lng Y")
+    const pendentes = enriched.filter((p: any) => p.geo_lat && p.geo_lng && isCoordFallback(p.geo_endereco));
+    pendentes.forEach(async (p: any) => {
+      const addr = await backfillGeoEndereco("pedidos", p.id, p.geo_lat, p.geo_lng);
+      if (addr) setList((cur) => cur.map((x) => (x.id === p.id ? { ...x, geo_endereco: addr } : x)));
+    });
   };
 
   const listFiltrada = filtroVendedor === "todos" ? list : list.filter((p) => p.owner_id === filtroVendedor);
