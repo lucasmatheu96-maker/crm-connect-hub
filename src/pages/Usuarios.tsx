@@ -265,6 +265,7 @@ export default function Usuarios() {
               <TableHeader>
                 <TableRow>
                   <TableHead>E-mail / Nome</TableHead>
+                  <TableHead>Telefone</TableHead>
                   <TableHead>Papel</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Cadastrado</TableHead>
@@ -275,7 +276,7 @@ export default function Usuarios() {
               </TableHeader>
               <TableBody>
                 {emails.length === 0 && !loading && (
-                  <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                     Nenhum e-mail autorizado ainda. Adicione um para liberar o acesso.
                   </TableCell></TableRow>
                 )}
@@ -287,6 +288,9 @@ export default function Usuarios() {
                         <div className="font-medium">{a.email}</div>
                         {a.nome && <div className="text-xs text-muted-foreground">{a.nome}</div>}
                         {a.notes && <div className="text-xs text-muted-foreground italic mt-1">{a.notes}</div>}
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                        {a.telefone || "—"}
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline" className="uppercase text-[10px]">{a.role}</Badge>
