@@ -133,11 +133,15 @@ export default function Orcamentos() {
         await offlineDelete("orcamento_itens", { column: "orcamento_id", value: editing.id });
       }
     } else {
-      const geo = await captureLocation(getClienteFallbackAddress(form.cliente_id), { reason: "cadastro_orcamento" });
       // gera UUID local para permitir vincular itens mesmo offline
       orcamentoId = (typeof crypto !== "undefined" && (crypto as any).randomUUID)
         ? (crypto as any).randomUUID()
         : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const geo = await captureLocation(getClienteFallbackAddress(form.cliente_id), {
+        reason: "cadastro_orcamento",
+        refTable: "orcamentos",
+        refId: orcamentoId,
+      });
       const { error } = await offlineInsert("orcamentos", { id: orcamentoId, ...payload, ...geo });
       if (error) { toast.error(error.message); setBusy(false); return; }
     }
