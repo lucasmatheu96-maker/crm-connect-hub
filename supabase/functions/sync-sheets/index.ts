@@ -31,6 +31,42 @@ function resolveGeoAddress(geoAddress: string | null | undefined, structured: st
   return structured || "";
 }
 
+function isCoordFallback(value: string | null | undefined) {
+  if (!value) return true;
+  const text = value.toString().trim();
+  return /^Lat\s-?\d/i.test(text) || /^-?\d+(?:\.\d+)?,\s*-?\d+(?:\.\d+)?$/.test(text);
+}
+
+const geoCache = new Map<string, Promise<string>>();
+
+async function reverseGeocodeFallback(lat: number, lng: number) {
+  const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&accept-language=pt-BR&lat=${lat}&lon=${lng}`;
+  const response = await fetch(url, {
+    headers: {
+      "User-Agent": "Lovable CRM/1.0",
+      "Accept-Language": "pt-BR",
+    },
+  });
+  const data: any = await response.json().catch(() => ({}));
+  const addr = data?.address ?? {};
+  const street = [addr.road, addr.house_number].filter(Boolean).join(", ");
+  const locality = [addr.suburb || addr.neighbourhood, addr.city || addr.town || addr.village].filter(Boolean).join(" - ");
+  const region = [addr.state, addr.postcode ? `CEP ${addr.postcode}` : null, addr.country].filter(Boolean).join(", ");
+  return [street, locality, region].filter(Boolean).join(" • ") || data?.display_name || "";
+}
+
+async function resolveGeoForExport(geoAddress: string | null | undefined, lat: number | null | undefined, lng: number | null | undefined) {
+  const real = geoAddress?.toString().trim() || "";
+  if (real && !isCoordFallback(real)) return real;
+  if (typeof lat !== "number" || typeof lng !== "number") return "";
+
+  const key = `${lat.toFixed(6)},${lng.toFixed(6)}`;
+  if (!geoCache.has(key)) {
+    geoCache.set(key, reverseGeocodeFallback(lat, lng).catch(() => ""));
+  }
+  return await geoCache.get(key)!;
+}
+
 async function callSheets(method: string, path: string, sheetsKey: string, lovKey: string, body?: any) {
   const r = await fetch(`${GATEWAY_URL}${path}`, {
     method,
