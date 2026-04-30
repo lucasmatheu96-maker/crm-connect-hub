@@ -289,6 +289,9 @@ export default function Usuarios() {
                         {a.nome && <div className="text-xs text-muted-foreground">{a.nome}</div>}
                         {a.notes && <div className="text-xs text-muted-foreground italic mt-1">{a.notes}</div>}
                       </TableCell>
+                      <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                        {a.telefone || "—"}
+                      </TableCell>
                       <TableCell>
                         <Badge variant="outline" className="uppercase text-[10px]">{a.role}</Badge>
                       </TableCell>
