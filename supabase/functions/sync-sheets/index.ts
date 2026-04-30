@@ -83,6 +83,35 @@ async function writeTab(spreadsheetId: string, tab: string, rows: any[][], sheet
   }
 }
 
+const BATCH_SIZE = 200;
+
+function chunkArray<T>(items: T[], size = BATCH_SIZE) {
+  const chunks: T[][] = [];
+  for (let i = 0; i < items.length; i += size) {
+    chunks.push(items.slice(i, i + size));
+  }
+  return chunks;
+}
+
+async function insertRowsInChunks(supabase: any, table: string, rows: any[]) {
+  if (!rows.length) return 0;
+  let inserted = 0;
+  for (const chunk of chunkArray(rows)) {
+    const { error } = await supabase.from(table).insert(chunk);
+    if (error) throw error;
+    inserted += chunk.length;
+  }
+  return inserted;
+}
+
+async function upsertRowsByIdInChunks(supabase: any, table: string, rows: any[]) {
+  if (!rows.length) return;
+  for (const chunk of chunkArray(rows)) {
+    const { error } = await supabase.from(table).upsert(chunk, { onConflict: "id" });
+    if (error) throw error;
+  }
+}
+
 function rowsToObjects(rows: any[][]): Record<string, string>[] {
   if (!rows.length) return [];
   const headers = rows[0].map((h) => String(h || "").trim());
@@ -143,9 +172,13 @@ Deno.serve(async (req: Request) => {
     {
       const rows = await readTab(spreadsheetId, "Clientes", sheetsKey, lovKey);
       const objs = rowsToObjects(rows);
-      const { data: existing } = await supabase.from("clientes").select("id, cpf_cnpj");
-      const byCpf = new Map<string, string>();
-      (existing || []).forEach((c: any) => { if (c.cpf_cnpj) byCpf.set(onlyDigits(c.cpf_cnpj), c.id); });
+      const { data: existing } = await supabase.from("clientes").select("id, cpf_cnpj, source");
+      const byCpf = new Map<string, { id: string; source: string | null }>();
+      (existing || []).forEach((c: any) => {
+        if (c.cpf_cnpj) byCpf.set(onlyDigits(c.cpf_cnpj), { id: c.id, source: c.source || null });
+      });
+      const toInsert: any[] = [];
+      const toUpdate: any[] = [];
 
       for (const o of objs) {
         const cpf = onlyDigits(o["CPF/CNPJ"] || "");
@@ -166,24 +199,29 @@ Deno.serve(async (req: Request) => {
           geo_lng: o["Lng"] ? toNum(o["Lng"]) : null,
           geo_endereco: o["Endereço GPS"] || null,
         };
-        const existingId = byCpf.get(cpf);
-        if (existingId) {
-          // Só atualiza se já está marcado como source=sheet (preserva edições do app)
-          await supabase.from("clientes").update(payload).eq("id", existingId).eq("source", "sheet");
-        } else {
-          const { error } = await supabase.from("clientes").insert(payload);
-          if (!error) imported.clientes++;
+        const existingRow = byCpf.get(cpf);
+        if (existingRow?.source === "sheet") {
+          toUpdate.push({ id: existingRow.id, ...payload });
+        } else if (!existingRow) {
+          toInsert.push(payload);
         }
       }
+
+      await upsertRowsByIdInChunks(supabase, "clientes", toUpdate);
+      imported.clientes += await insertRowsInChunks(supabase, "clientes", toInsert);
     }
 
     // PRODUTOS — chave: SKU
     {
       const rows = await readTab(spreadsheetId, "Produtos", sheetsKey, lovKey);
       const objs = rowsToObjects(rows);
-      const { data: existing } = await supabase.from("produtos").select("id, sku");
-      const bySku = new Map<string, string>();
-      (existing || []).forEach((p: any) => { if (p.sku) bySku.set(norm(p.sku), p.id); });
+      const { data: existing } = await supabase.from("produtos").select("id, sku, source");
+      const bySku = new Map<string, { id: string; source: string | null }>();
+      (existing || []).forEach((p: any) => {
+        if (p.sku) bySku.set(norm(p.sku), { id: p.id, source: p.source || null });
+      });
+      const toInsert: any[] = [];
+      const toUpdate: any[] = [];
 
       for (const o of objs) {
         const sku = norm(o["SKU"] || "");
@@ -198,15 +236,25 @@ Deno.serve(async (req: Request) => {
           estoque: toInt(o["Estoque"] || "0"),
           ativo: o["Ativo"] === "" ? true : toBool(o["Ativo"]),
         };
-        const existingId = bySku.get(sku);
-        if (existingId) {
-          await supabase.from("produtos").update(payload).eq("id", existingId).eq("source", "sheet");
-        } else {
-          const { error } = await supabase.from("produtos").insert(payload);
-          if (!error) imported.produtos++;
+        const existingRow = bySku.get(sku);
+        if (existingRow?.source === "sheet") {
+          toUpdate.push({ id: existingRow.id, ...payload });
+        } else if (!existingRow) {
+          toInsert.push(payload);
         }
       }
+
+      await upsertRowsByIdInChunks(supabase, "produtos", toUpdate);
+      imported.produtos += await insertRowsInChunks(supabase, "produtos", toInsert);
     }
+
+    const { data: clientesForDocs } = await supabase.from("clientes").select("id, cpf_cnpj, nome");
+    const cliByCpf = new Map<string, string>();
+    const cliByNome = new Map<string, string>();
+    (clientesForDocs || []).forEach((c: any) => {
+      if (c.cpf_cnpj) cliByCpf.set(onlyDigits(c.cpf_cnpj), c.id);
+      if (c.nome) cliByNome.set(norm(c.nome), c.id);
+    });
 
     // ORCAMENTOS / PEDIDOS — chave: Número (e cliente por CPF/CNPJ na coluna)
     // Para orçamentos/pedidos importados da planilha, exigimos CPF/CNPJ do cliente para vincular
@@ -216,17 +264,11 @@ Deno.serve(async (req: Request) => {
     ) => {
       const rows = await readTab(spreadsheetId, tab, sheetsKey, lovKey);
       const objs = rowsToObjects(rows);
-      const { data: existing } = await supabase.from(table).select("id, numero");
-      const byNumero = new Map<number, string>();
-      (existing || []).forEach((d: any) => byNumero.set(Number(d.numero), d.id));
-
-      const { data: cli } = await supabase.from("clientes").select("id, cpf_cnpj, nome");
-      const cliByCpf = new Map<string, string>();
-      const cliByNome = new Map<string, string>();
-      (cli || []).forEach((c: any) => {
-        if (c.cpf_cnpj) cliByCpf.set(onlyDigits(c.cpf_cnpj), c.id);
-        if (c.nome) cliByNome.set(norm(c.nome), c.id);
-      });
+      const { data: existing } = await supabase.from(table).select("id, numero, source");
+      const byNumero = new Map<number, { id: string; source: string | null }>();
+      (existing || []).forEach((d: any) => byNumero.set(Number(d.numero), { id: d.id, source: d.source || null }));
+      const toInsert: any[] = [];
+      const toUpdate: any[] = [];
 
       for (const o of objs) {
         const numero = toInt(o["Número"] || "0");
@@ -246,14 +288,17 @@ Deno.serve(async (req: Request) => {
         };
         if (table === "orcamentos" && o["Validade"]) base.validade = o["Validade"];
 
-        if (numero && byNumero.has(numero)) {
-          await supabase.from(table).update(base).eq("id", byNumero.get(numero)!).eq("source", "sheet");
+        const existingRow = numero ? byNumero.get(numero) : null;
+        if (existingRow?.source === "sheet") {
+          toUpdate.push({ id: existingRow.id, ...base });
         } else {
           const insertPayload = numero ? { ...base, numero } : base;
-          const { error } = await supabase.from(table).insert(insertPayload);
-          if (!error) imported[table]++;
+          if (!existingRow) toInsert.push(insertPayload);
         }
       }
+
+      await upsertRowsByIdInChunks(supabase, table, toUpdate);
+      imported[table] += await insertRowsInChunks(supabase, table, toInsert);
     };
     await Promise.all([
       importDocs("Orcamentos", "orcamentos"),
