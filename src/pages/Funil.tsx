@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { fmtMoney } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { SearchableSelect } from "@/components/SearchableSelect";
+import { backfillGeoEndereco, isCoordFallback } from "@/lib/geoBackfill";
 
 const STAGES = [
   { id: "lead", label: "Lead", color: "bg-secondary" },
