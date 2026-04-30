@@ -31,6 +31,42 @@ function resolveGeoAddress(geoAddress: string | null | undefined, structured: st
   return structured || "";
 }
 
+function isCoordFallback(value: string | null | undefined) {
+  if (!value) return true;
+  const text = value.toString().trim();
+  return /^Lat\s-?\d/i.test(text) || /^-?\d+(?:\.\d+)?,\s*-?\d+(?:\.\d+)?$/.test(text);
+}
+
+const geoCache = new Map<string, Promise<string>>();
+
+async function reverseGeocodeFallback(lat: number, lng: number) {
+  const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&accept-language=pt-BR&lat=${lat}&lon=${lng}`;
+  const response = await fetch(url, {
+    headers: {
+      "User-Agent": "Lovable CRM/1.0",
+      "Accept-Language": "pt-BR",
+    },
+  });
+  const data: any = await response.json().catch(() => ({}));
+  const addr = data?.address ?? {};
+  const street = [addr.road, addr.house_number].filter(Boolean).join(", ");
+  const locality = [addr.suburb || addr.neighbourhood, addr.city || addr.town || addr.village].filter(Boolean).join(" - ");
+  const region = [addr.state, addr.postcode ? `CEP ${addr.postcode}` : null, addr.country].filter(Boolean).join(", ");
+  return [street, locality, region].filter(Boolean).join(" • ") || data?.display_name || "";
+}
+
+async function resolveGeoForExport(geoAddress: string | null | undefined, lat: number | null | undefined, lng: number | null | undefined) {
+  const real = geoAddress?.toString().trim() || "";
+  if (real && !isCoordFallback(real)) return real;
+  if (typeof lat !== "number" || typeof lng !== "number") return "";
+
+  const key = `${lat.toFixed(6)},${lng.toFixed(6)}`;
+  if (!geoCache.has(key)) {
+    geoCache.set(key, reverseGeocodeFallback(lat, lng).catch(() => ""));
+  }
+  return await geoCache.get(key)!;
+}
+
 async function callSheets(method: string, path: string, sheetsKey: string, lovKey: string, body?: any) {
   const r = await fetch(`${GATEWAY_URL}${path}`, {
     method,
@@ -338,25 +374,33 @@ Deno.serve(async (req: Request) => {
       ["ID","Nome","SKU","Categoria","Preço","Estoque","Ativo","Fonte","Criado em"],
       ...(produtosQ.data || []).map((p: any) => [p.id, p.nome, p.sku, p.categoria, p.preco, p.estoque, p.ativo, p.source || "app", formatDateTimeForSheet(p.created_at)]),
     ];
+    const orcData = await Promise.all((orcamentosQ.data || []).map(async (o: any) => {
+      const cli = clienteById.get(o.cliente_id);
+      const geoAddress = await resolveGeoForExport(o.geo_endereco, o.geo_lat, o.geo_lng);
+      return [o.numero, cli?.nome || "", cli?.cpf_cnpj || "", o.status, o.validade, o.total, o.geo_lat, o.geo_lng, geoAddress, o.source || "app", formatDateTimeForSheet(o.created_at)];
+    }));
     const orcRows = [
       ["Número","Cliente","CPF/CNPJ Cliente","Status","Validade","Total","Lat","Lng","Endereço GPS","Fonte","Criado em"],
-      ...(orcamentosQ.data || []).map((o: any) => {
-        const cli = clienteById.get(o.cliente_id);
-        return [o.numero, cli?.nome || "", cli?.cpf_cnpj || "", o.status, o.validade, o.total, o.geo_lat, o.geo_lng, (o.geo_endereco || "").toString().trim(), o.source || "app", formatDateTimeForSheet(o.created_at)];
-      }),
+      ...orcData,
     ];
+    const pedData = await Promise.all((pedidosQ.data || []).map(async (p: any) => {
+      const cli = clienteById.get(p.cliente_id);
+      const geoAddress = await resolveGeoForExport(p.geo_endereco, p.geo_lat, p.geo_lng);
+      return [p.numero, cli?.nome || "", cli?.cpf_cnpj || "", p.status, p.total, p.geo_lat, p.geo_lng, geoAddress, p.source || "app", formatDateTimeForSheet(p.created_at)];
+    }));
     const pedRows = [
       ["Número","Cliente","CPF/CNPJ Cliente","Status","Total","Lat","Lng","Endereço GPS","Fonte","Criado em"],
-      ...(pedidosQ.data || []).map((p: any) => {
-        const cli = clienteById.get(p.cliente_id);
-        return [p.numero, cli?.nome || "", cli?.cpf_cnpj || "", p.status, p.total, p.geo_lat, p.geo_lng, (p.geo_endereco || "").toString().trim(), p.source || "app", formatDateTimeForSheet(p.created_at)];
-      }),
+      ...pedData,
     ];
+    const opData = await Promise.all((oportQ.data || []).map(async (o: any) => {
+      const geoAddress = await resolveGeoForExport(o.geo_endereco, o.geo_lat, o.geo_lng);
+      const cli = clienteById.get(o.cliente_id);
+      return [o.titulo, cli?.nome || "", o.estagio, o.valor, o.probabilidade, o.data_fechamento_prevista, o.geo_lat, o.geo_lng, geoAddress, formatDateTimeForSheet(o.created_at)];
+    }));
     const opRows = [
-      ["Título","Cliente","Estágio","Valor","Probabilidade","Fechamento previsto","Criado em"],
-      ...(oportQ.data || []).map((o: any) => {
-        const cli = clienteById.get(o.cliente_id);
-        return [o.titulo, cli?.nome || "", o.estagio, o.valor, o.probabilidade, o.data_fechamento_prevista, formatDateTimeForSheet(o.created_at)];
+      ["Título","Cliente","Estágio","Valor","Probabilidade","Fechamento previsto","Lat","Lng","Endereço GPS","Criado em"],
+      ...opData.map((o: any) => {
+        return o;
       }),
     ];
 

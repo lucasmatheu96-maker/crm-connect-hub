@@ -26,7 +26,7 @@ export async function backfillGeoEndereco(
     try {
       const { data } = await supabase.functions.invoke("reverse-geocode", { body: { lat, lng } });
       const address: string | null = data?.address ?? data?.formatted_address ?? null;
-      if (!address) return null;
+      if (!address || isCoordFallback(address)) return null;
       await supabase.from(table as any).update({ geo_endereco: address }).eq("id", id);
       return address;
     } catch {
