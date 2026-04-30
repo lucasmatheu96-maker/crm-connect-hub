@@ -68,13 +68,19 @@ async function readTab(spreadsheetId: string, tab: string, sheetsKey: string, lo
 }
 
 async function writeTab(spreadsheetId: string, tab: string, rows: any[][], sheetsKey: string, lovKey: string) {
-  await callSheets("POST", `/spreadsheets/${spreadsheetId}/values/${tab}!A:Z:clear`, sheetsKey, lovKey, {});
-  await callSheets(
-    "PUT",
-    `/spreadsheets/${spreadsheetId}/values/${tab}!A1?valueInputOption=USER_ENTERED`,
-    sheetsKey, lovKey,
-    { values: rows },
-  );
+  try {
+    await callSheets("POST", `/spreadsheets/${spreadsheetId}/values/${tab}!A:Z:clear`, sheetsKey, lovKey, {});
+    await callSheets(
+      "PUT",
+      `/spreadsheets/${spreadsheetId}/values/${tab}!A1?valueInputOption=USER_ENTERED`,
+      sheetsKey, lovKey,
+      { values: rows },
+    );
+    console.log(`[sync-sheets] writeTab ${tab}: ${rows.length - 1} linhas escritas`);
+  } catch (e) {
+    console.error(`[sync-sheets] writeTab ${tab} FALHOU:`, e);
+    throw e;
+  }
 }
 
 function rowsToObjects(rows: any[][]): Record<string, string>[] {
