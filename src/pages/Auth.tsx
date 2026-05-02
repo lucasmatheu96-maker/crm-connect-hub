@@ -99,10 +99,6 @@ export default function AuthPage() {
               </>
             )}
           </Button>
-
-          <p className="mt-6 text-center text-[11px] text-muted-foreground">
-            Ao continuar, você concorda em ter seu acesso registrado para fins de auditoria.
-          </p>
         </Card>
       </div>
     </div>
