@@ -16,8 +16,8 @@ async function trigger(reason: string) {
   if (inFlight) return;
   if (Date.now() - lastSyncAt < MIN_INTERVAL_MS) return;
   // só sincroniza se habilitado
-  const { data: cfg } = await supabase.from("app_settings").select("sync_enabled, google_sheet_id").eq("id", 1).maybeSingle();
-  if (!cfg?.sync_enabled || !cfg?.google_sheet_id) return;
+  const { data: cfg } = await supabase.rpc("get_sync_status").maybeSingle();
+  if (!cfg?.sync_enabled || !cfg?.has_sheet) return;
   inFlight = true;
   try {
     await supabase.functions.invoke("sync-sheets");

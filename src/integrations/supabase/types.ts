@@ -723,6 +723,13 @@ export type Database = {
     }
     Functions: {
       find_user_by_name: { Args: { _nome: string }; Returns: string }
+      get_sync_status: {
+        Args: never
+        Returns: {
+          has_sheet: boolean
+          sync_enabled: boolean
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
