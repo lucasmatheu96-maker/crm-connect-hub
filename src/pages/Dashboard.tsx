@@ -9,6 +9,8 @@ import { ShoppingCart, FileText, TrendingUp, Users, Package, Trophy } from "luci
 import { fmtMoney, fmtDate, abreviar } from "@/lib/format";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, LineChart, Line } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AgendaDia } from "@/components/AgendaDia";
+
 
 type RankMode = "vendedor" | "cliente" | "produto";
 
@@ -175,6 +177,10 @@ export default function Dashboard() {
           )}
         </Card>
       </div>
+
+      <AgendaDia />
+
+
 
       <DetailModal
         detail={detail}
