@@ -1,11 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CalendarCheck, Plus, Trash2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { CalendarCheck, ChevronLeft, ChevronRight, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface Tarefa {
@@ -17,28 +19,36 @@ interface Tarefa {
   concluido: boolean;
 }
 
-const hojeISO = () => {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-};
+const iso = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+const DIAS = ["D", "S", "T", "Q", "Q", "S", "S"];
 
 export const AgendaDia = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [data, setData] = useState(hojeISO());
+  const [ref, setRef] = useState(() => {
+    const d = new Date();
+    return new Date(d.getFullYear(), d.getMonth(), 1);
+  });
   const [itens, setItens] = useState<Tarefa[]>([]);
+  const [diaSel, setDiaSel] = useState<string | null>(null);
   const [titulo, setTitulo] = useState("");
   const [hora, setHora] = useState("");
   const [descricao, setDescricao] = useState("");
 
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [data]);
+  const inicio = useMemo(() => iso(new Date(ref.getFullYear(), ref.getMonth(), 1)), [ref]);
+  const fim = useMemo(() => iso(new Date(ref.getFullYear(), ref.getMonth() + 1, 0)), [ref]);
+
+  useEffect(() => { load(); /* eslint-disable-next-line */ }, [inicio, fim]);
 
   const load = async () => {
     setLoading(true);
     const { data: rows, error } = await supabase
       .from("agenda")
       .select("id, titulo, descricao, data, hora, concluido")
-      .eq("data", data)
+      .gte("data", inicio)
+      .lte("data", fim)
       .order("hora", { ascending: true, nullsFirst: false })
       .order("created_at", { ascending: true });
     if (error) toast.error("Erro ao carregar agenda");
@@ -46,14 +56,31 @@ export const AgendaDia = () => {
     setLoading(false);
   };
 
+  const porDia = useMemo(() => {
+    const m: Record<string, Tarefa[]> = {};
+    itens.forEach((t) => { (m[t.data] ||= []).push(t); });
+    return m;
+  }, [itens]);
+
+  const celulas = useMemo(() => {
+    const primeiro = new Date(ref.getFullYear(), ref.getMonth(), 1);
+    const totalDias = new Date(ref.getFullYear(), ref.getMonth() + 1, 0).getDate();
+    const vazios = primeiro.getDay();
+    const arr: (string | null)[] = Array(vazios).fill(null);
+    for (let d = 1; d <= totalDias; d++) arr.push(iso(new Date(ref.getFullYear(), ref.getMonth(), d)));
+    while (arr.length % 7 !== 0) arr.push(null);
+    return arr;
+  }, [ref]);
+
   const adicionar = async () => {
+    if (!diaSel) return;
     if (!titulo.trim()) { toast.error("Informe o compromisso"); return; }
     setSaving(true);
     const { error } = await supabase.from("agenda").insert({
       titulo: titulo.trim(),
       descricao: descricao.trim() || null,
       hora: hora || null,
-      data,
+      data: diaSel,
     });
     setSaving(false);
     if (error) { toast.error("Não foi possível salvar"); return; }
@@ -73,94 +100,111 @@ export const AgendaDia = () => {
     if (error) { toast.error("Erro ao excluir"); load(); }
   };
 
-  const feitos = itens.filter((i) => i.concluido).length;
+  const hoje = iso(new Date());
+  const mesLabel = ref.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+  const doDia = diaSel ? porDia[diaSel] || [] : [];
 
   return (
     <Card className="mt-6 p-4 sm:p-6 shadow-elevated overflow-hidden">
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mb-4 flex items-center justify-between gap-2">
         <div className="min-w-0">
           <h3 className="font-semibold flex items-center gap-2">
-            <CalendarCheck className="h-4 w-4 text-primary" />Agenda do dia
+            <CalendarCheck className="h-4 w-4 text-primary" />Agenda
           </h3>
-          <p className="text-xs text-muted-foreground">
-            {itens.length === 0 ? "Nenhum compromisso" : `${feitos} de ${itens.length} concluído(s)`}
-          </p>
+          <p className="text-xs text-muted-foreground capitalize">{mesLabel}</p>
         </div>
-        <Input
-          type="date"
-          value={data}
-          onChange={(e) => setData(e.target.value || hojeISO())}
-          className="sm:w-44"
-        />
+        <div className="flex gap-1 shrink-0">
+          <Button size="icon" variant="outline" className="h-8 w-8"
+            onClick={() => setRef(new Date(ref.getFullYear(), ref.getMonth() - 1, 1))}>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Button size="icon" variant="outline" className="h-8 w-8"
+            onClick={() => setRef(new Date(ref.getFullYear(), ref.getMonth() + 1, 1))}>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
-
-      <div className="grid gap-2 sm:grid-cols-[1fr_auto_auto] mb-4">
-        <Input
-          placeholder="Novo compromisso (ex.: Visita cliente X)"
-          value={titulo}
-          onChange={(e) => setTitulo(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && adicionar()}
-          className="min-w-0"
-        />
-        <Input type="time" value={hora} onChange={(e) => setHora(e.target.value)} className="sm:w-32" />
-        <Button onClick={adicionar} disabled={saving} className="shrink-0">
-          <Plus className="h-4 w-4" /> Adicionar
-        </Button>
-      </div>
-      <Input
-        placeholder="Observações (opcional)"
-        value={descricao}
-        onChange={(e) => setDescricao(e.target.value)}
-        className="mb-4"
-      />
 
       {loading ? (
-        <Skeleton className="h-32 w-full" />
-      ) : itens.length === 0 ? (
-        <p className="text-sm text-muted-foreground py-6 text-center">
-          Adicione os afazeres do dia para acompanhar sua rotina.
-        </p>
+        <Skeleton className="h-64 w-full" />
       ) : (
-        <div className="overflow-hidden rounded-lg border">
-          <table className="w-full text-sm table-fixed">
-            <thead className="bg-muted/50">
-              <tr className="text-left text-xs text-muted-foreground">
-                <th className="w-10 p-2"></th>
-                <th className="w-16 p-2">Hora</th>
-                <th className="p-2">Compromisso</th>
-                <th className="w-10 p-2"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {itens.map((t) => (
-                <tr key={t.id} className={t.concluido ? "opacity-60" : ""}>
-                  <td className="p-2 align-top">
-                    <Checkbox checked={t.concluido} onCheckedChange={() => alternar(t)} />
-                  </td>
-                  <td className="p-2 align-top text-xs text-muted-foreground whitespace-nowrap">
-                    {t.hora ? t.hora.slice(0, 5) : "—"}
-                  </td>
-                  <td className="p-2 min-w-0">
-                    <div className={`truncate font-medium ${t.concluido ? "line-through" : ""}`} title={t.titulo}>
-                      {t.titulo}
-                    </div>
-                    {t.descricao && (
-                      <div className="truncate text-xs text-muted-foreground" title={t.descricao}>
-                        {t.descricao}
-                      </div>
-                    )}
-                  </td>
-                  <td className="p-2 align-top">
-                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => remover(t.id)}>
-                      <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="grid grid-cols-7 gap-1">
+          {DIAS.map((d, i) => (
+            <div key={i} className="pb-1 text-center text-[11px] font-medium text-muted-foreground">{d}</div>
+          ))}
+          {celulas.map((c, i) => {
+            if (!c) return <div key={i} />;
+            const tarefas = porDia[c] || [];
+            const pend = tarefas.filter((t) => !t.concluido).length;
+            return (
+              <button
+                key={i}
+                type="button"
+                onClick={() => setDiaSel(c)}
+                className={`aspect-square rounded-lg border p-1 text-left transition-colors hover:bg-accent/50 ${
+                  c === hoje ? "border-primary bg-primary/5" : "border-border"
+                }`}
+              >
+                <div className={`text-xs font-medium ${c === hoje ? "text-primary" : ""}`}>
+                  {Number(c.slice(8, 10))}
+                </div>
+                {tarefas.length > 0 && (
+                  <div className="mt-0.5 flex flex-wrap gap-0.5">
+                    {tarefas.slice(0, 3).map((t) => (
+                      <span key={t.id} className={`h-1.5 w-1.5 rounded-full ${t.concluido ? "bg-muted-foreground/40" : "bg-primary"}`} />
+                    ))}
+                    {pend > 3 && <span className="text-[9px] text-muted-foreground leading-none">+</span>}
+                  </div>
+                )}
+              </button>
+            );
+          })}
         </div>
       )}
+
+      <Dialog open={!!diaSel} onOpenChange={(o) => { if (!o) { setDiaSel(null); setTitulo(""); setHora(""); setDescricao(""); } }}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-base">
+              {diaSel ? new Date(`${diaSel}T12:00:00`).toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" }) : ""}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-2">
+            <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
+              <Input placeholder="Título do compromisso" value={titulo} onChange={(e) => setTitulo(e.target.value)} className="min-w-0" />
+              <Input type="time" value={hora} onChange={(e) => setHora(e.target.value)} className="sm:w-32" />
+            </div>
+            <Textarea placeholder="Observações (opcional)" value={descricao} onChange={(e) => setDescricao(e.target.value)} rows={2} />
+            <Button onClick={adicionar} disabled={saving} className="w-full">
+              <Plus className="h-4 w-4" /> Adicionar
+            </Button>
+          </div>
+
+          <div className="mt-2 space-y-2">
+            {doDia.length === 0 ? (
+              <p className="py-4 text-center text-sm text-muted-foreground">Nenhum compromisso neste dia.</p>
+            ) : (
+              doDia.map((t) => (
+                <div key={t.id} className={`flex items-start gap-2 rounded-lg border p-2 ${t.concluido ? "opacity-60" : ""}`}>
+                  <Checkbox checked={t.concluido} onCheckedChange={() => alternar(t)} className="mt-0.5" />
+                  <div className="min-w-0 flex-1">
+                    <div className={`truncate text-sm font-medium ${t.concluido ? "line-through" : ""}`} title={t.titulo}>
+                      {t.hora ? `${t.hora.slice(0, 5)} · ` : ""}{t.titulo}
+                    </div>
+                    {t.descricao && (
+                      <div className="text-xs text-muted-foreground break-words">{t.descricao}</div>
+                    )}
+                  </div>
+                  <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" onClick={() => remover(t.id)}>
+                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                  </Button>
+                </div>
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
