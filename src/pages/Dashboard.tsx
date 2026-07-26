@@ -176,6 +176,10 @@ export default function Dashboard() {
         </Card>
       </div>
 
+      <AgendaDia />
+
+
+
       <DetailModal
         detail={detail}
         onClose={() => setDetail(null)}
