@@ -71,6 +71,42 @@ export type Database = {
         }
         Relationships: []
       }
+      agenda: {
+        Row: {
+          concluido: boolean
+          created_at: string
+          data: string
+          descricao: string | null
+          hora: string | null
+          id: string
+          owner_id: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          concluido?: boolean
+          created_at?: string
+          data?: string
+          descricao?: string | null
+          hora?: string | null
+          id?: string
+          owner_id?: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          concluido?: boolean
+          created_at?: string
+          data?: string
+          descricao?: string | null
+          hora?: string | null
+          id?: string
+          owner_id?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       app_settings: {
         Row: {
           google_sheet_id: string | null
