@@ -115,8 +115,10 @@ export default function Dashboard() {
         <KpiCard icon={TrendingUp} label="Taxa de conversão" value={loading ? null : `${stats!.conversao}%`} />
       </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-3">
-        <Card className="p-6 lg:col-span-2 shadow-elevated">
+      <div className="mt-6 grid gap-6 lg:grid-cols-3 items-start">
+        <div className="lg:col-span-2 space-y-6 min-w-0">
+        <Card className="p-6 shadow-elevated">
+
           <div className="mb-4">
             <h3 className="font-semibold">Vendas — últimos 14 dias</h3>
             <p className="text-xs text-muted-foreground">Receita diária de pedidos confirmados</p>
@@ -140,7 +142,11 @@ export default function Dashboard() {
           )}
         </Card>
 
+        <AgendaDia />
+        </div>
+
         <Card className="p-6 shadow-elevated">
+
           <div className="mb-4 flex items-start justify-between gap-2">
             <div>
               <h3 className="font-semibold flex items-center gap-2"><Trophy className="h-4 w-4 text-primary" />{rankTitle}</h3>
@@ -178,7 +184,7 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      <AgendaDia />
+
 
 
 
