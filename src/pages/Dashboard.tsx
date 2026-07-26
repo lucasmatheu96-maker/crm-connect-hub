@@ -142,7 +142,11 @@ export default function Dashboard() {
           )}
         </Card>
 
+        <AgendaDia />
+        </div>
+
         <Card className="p-6 shadow-elevated">
+
           <div className="mb-4 flex items-start justify-between gap-2">
             <div>
               <h3 className="font-semibold flex items-center gap-2"><Trophy className="h-4 w-4 text-primary" />{rankTitle}</h3>
